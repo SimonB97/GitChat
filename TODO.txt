@@ -1,7 +1,8 @@
 IMPORTANT:
 - fix download of sources when using chromadb
 
-- handling multiple indexes in one vectorstore
+
+- handling multiple indexes in one vectorstore (pinecone)
 - handling multiple vectorstoretypes
 - selecting filetypes to download by checkboxes; additionaly, groups of filetypes
 - add streaming of responses

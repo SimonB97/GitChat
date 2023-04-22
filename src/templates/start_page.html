@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <head>
     <title>Start Page</title>
@@ -24,11 +25,17 @@
             font-weight: bold;
         }
 
+        .info-icon {
+            margin-left: 5px;
+            ;
+        }
+
         .form-control {
             background-color: #40414f;
             color: #f0f0f0;
             border: none;
             border-radius: 10px;
+            margin-top: 8px;
         }
 
         .form-control:focus {
@@ -49,27 +56,23 @@
         }
 
         .container {
-            max-width: 800px;
+            max-width: 80%;
         }
 
         .form-group {
             display: inline-block;
             vertical-align: top;
             position: relative;
-            padding: 0 20px;
+            padding: 0 40px;
             width: 49%;
             box-sizing: border-box;
+            margin:0px;
         }
 
-        /* .form-group::after {
-            content: "";
-            position: absolute;
-            top: 0;
-            right: 0;
-            height: 100%;
-            width: 1px;
-            background-color: #ccc;
-        } */
+        .form-group-textarea {
+            margin-bottom: 10px;
+            margin-top: 10px;
+        }
 
         .form-group:nth-child(2n)::after {
             display: none;
@@ -80,11 +83,40 @@
         }
 
         .horizontal-line {
-            width: 100%;
+            position: relative;
+            max-width: 85%;
             height: 2px;
             background-color: #383838;
-            margin: 20px 0;
+            margin: 10px 0;
+            margin-left: 6%;
+            margin-right: 7%;
         }
+
+        .form-options {
+            max-height: calc(100vh - 150px);
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .submit-button {
+            position: fixed;
+            bottom: 100px;
+            right:5%;
+
+        }
+
+        @media (max-width: 767px) {
+            .form-group {
+                width: 100%;
+                padding: 0 0 20px 0;
+            }
+        }
+
+        input[type="radio"]{
+            margin-top: 11px;
+            margin-left: 15px;
+        }
+
 
     </style>
     <script>
@@ -100,10 +132,22 @@
                 modelNameCompressor.style.display = "none";
             }
         }
-        document.addEventListener("DOMContentLoaded", function() {
-            toggleModelNameCompressor();
-        });
+        function toggleAlphaForm() {
+            var vectorStorePinecone = document.getElementById("vector_store_pinecone");
+            var alphaForm = document.getElementById("alpha_form");
+            if (vectorStorePinecone.checked) {
+                alphaForm.style.display = "inline-block";
+            } else {
+                alphaForm.style.display = "none";
+            }
+        }
         $(document).ready(function() {
+            toggleModelNameCompressor();
+            toggleAlphaForm();
+    
+            document.getElementById("vector_store_pinecone").addEventListener("change", toggleAlphaForm);
+            document.getElementById("vector_store_chromadb").addEventListener("change", toggleAlphaForm);
+    
             $('.info-icon').qtip({
                 content: {
                     attr: 'data-tooltip'
@@ -112,106 +156,109 @@
                     classes: 'qtip-bootstrap'
                 },
                 position: {
-                    my: 'bottom center',
-                    at: 'top center'
+                    my: 'left center',
+                    at: 'right center'
                 }
             });
         });
-
     </script>
+    
 </head>
 
 <body>
     <div class="container">
         <h2>Enter the parameters</h2>
         <form method="POST" action="{{ url_for('start') }}">
-            <div class="form-group">
-                <label for="repo_url">Repo URL: <i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="Enter the repository URL here [https://github.com/<owner_name>/<repo_name>]. (e.g. [https://github.com/hwchase17/langchain])"></i></label>
-                <input type="text" class="form-control" id="repo_url" name="repo_url" value="https://github.com/hwchase17/langchain" required>
-            </div>
-            <div class="form-group">
-                <label for="subdirectory">Subdirectory: <i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="Enter the subdirectory of the repository here. (e.g. [docs])"></i></label>
-                <input type="text" class="form-control" id="subdirectory" name="subdirectory" value="None" required>
-            </div>
-            <div class="horizontal-line"></div>
-            <div class="form-group">
-                <label for="mem_window_k">Memory Window (k):</label>
-                <input type="range" class="form-control" id="mem_window_k" name="mem_window_k" min="0" max="40" step="1" value="6" oninput="updateSliderValue(this, 'mem_window_k_output')" required>
-                <span id="mem_window_k_output">6</span>
-            </div>
-            <div class="form-group">
-                <label for="alpha">Alpha:</label>
-                <input type="range" class="form-control" id="alpha" name="alpha" min="0.1" max="0.9" step="0.1" value="0.5" oninput="updateSliderValue(this, 'alpha_output')" required>
-                <span id="alpha_output">0.5</span>
-            </div>
-            <div class="horizontal-line"></div>
-            <div class="form-group">
-                <label for="temperature">Temperature:</label>
-                <input type="range" class="form-control" id="temperature" name="temperature" min="0" max="2" step="0.1" value="0.2" oninput="updateSliderValue(this, 'temperature_output')" required>
-                <span id="temperature_output">0.2</span>
-            </div>
-            <div class="form-group">
-                <label for="model_name">Model Name:</label>
-                <div>
-                    <input type="radio" id="gpt-3.5-turbo" name="model_name" value="gpt-3.5-turbo" checked>
-                    <label for="gpt-3.5-turbo">gpt-3.5-turbo</label>
-                    <input type="radio" id="gpt-4" name="model_name" value="gpt-4">
-                    <label for="gpt-4">gpt-4</label>
+            <div class="form-options"></div>
+                <div class="form-group form-group-textarea">
+                    <label for="repo_url">Repo URL: <i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="Enter the repository URL here [https://github.com/owner_name/repo_name]. (e.g. [https://github.com/hwchase17/langchain])"></i></label>
+                    <input type="text" class="form-control" id="repo_url" name="repo_url" value="https://github.com/hwchase17/langchain" required>
                 </div>
-            </div>
-            <div class="horizontal-line"></div>
-            <div class="form-group">
-                <label for="top_k">Top K:</label>
-                <input type="range" class="form-control" id="top_k" name="top_k" min="0" max="40" step="1" value="6" oninput="updateSliderValue(this, 'top_k_output')" required>
-                <span id="top_k_output">6</span>
-            </div>
-            <div class="form-group">
-                <label for="update">Update:</label>
-                <div>
-                    <input type="radio" id="update_true" name="update" value="true">
-                    <label for="update_true">True</label>
-                    <input type="radio" id="update_false" name="update" value="false" checked>
-                    <label for="update_false">False</label>
+                <div class="form-group form-group-textarea">
+                    <label for="subdirectory">Subdirectory: <i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="Enter the subdirectory of the repository or None (to load the whole repository) here. (e.g. [docs])"></i></label>
+                    <input type="text" class="form-control" id="subdirectory" name="subdirectory" value="None" required>
                 </div>
-            </div>
-            <div class="horizontal-line"></div>
-            <div class="form-group">
-                <label for="vector_store">Vector Store:</label>
-                <div>
-                    <input type="radio" id="vector_store_pinecone" name="vector_store" value="pinecone" checked>
-                    <label for="vector_store_pinecone">Pinecone</label>
-                    <input type="radio" id="vector_store_chromadb" name="vector_store" value="chromadb">
-                    <label for="vector_store_chromadb">ChromaDB</label>
+                <div class="horizontal-line"></div>
+                <div class="form-group">
+                    <label for="model_name">Model Name:</label>
+                    <div>
+                        <input type="radio" id="gpt-3.5-turbo" name="model_name" value="gpt-3.5-turbo" checked>
+                        <label for="gpt-3.5-turbo">GPT-3.5-turbo</label>
+                        <input type="radio" id="gpt-4" name="model_name" value="gpt-4">
+                        <label for="gpt-4">GPT-4</label>
+                    </div>
                 </div>
-            </div>
-            <div class="form-group">
-                <label for="compress">Compress:</label>
-                <div>
-                    <input type="radio" id="compress_true" name="compress" value="true" onchange="toggleModelNameCompressor()">
-                    <label for="compress_true">True</label>
-                    <input type="radio" id="compress_false" name="compress" value="false" checked onchange="toggleModelNameCompressor()">
-                    <label for="compress_false">False</label>
+                <div class="form-group">
+                    <label for="temperature">Temperature:</label>
+                    <input type="range" class="form-control" id="temperature" name="temperature" min="0" max="2" step="0.1" value="0.2" oninput="updateSliderValue(this, 'temperature_output')" required>
+                    <span id="temperature_output">0.2</span>
+                </div>
+                <div class="horizontal-line"></div>
+                <div class="form-group">
+                    <label for="mem_window_k">Chat Memory Length: <i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="Enter the memory window size here. This determines how many of the latest messages should be kept in the AIs memory."></i></label>
+                    <input type="range" class="form-control" id="mem_window_k" name="mem_window_k" min="0" max="40" step="1" value="6" oninput="updateSliderValue(this, 'mem_window_k_output')" required>
+                    <span id="mem_window_k_output">6</span>
+                </div>
+                <div id="alpha_form" class="form-group">
+                    <label for="alpha">Alpha:</label>
+                    <input type="range" class="form-control" id="alpha" name="alpha" min="0.1" max="0.9" step="0.1" value="0.5" oninput="updateSliderValue(this, 'alpha_output')" required>
+                    <span id="alpha_output">0.5</span>
+                </div>
+                <div class="horizontal-line"></div>
+                
+                <div class="form-group">
+                    <label for="top_k">Top K:</label>
+                    <input type="range" class="form-control" id="top_k" name="top_k" min="0" max="40" step="1" value="6" oninput="updateSliderValue(this, 'top_k_output')" required>
+                    <span id="top_k_output">6</span>
+                </div>
+                <div class="form-group">
+                    <label for="update">Update:</label>
+                    <div>
+                        <input type="radio" id="update_true" name="update" value="true">
+                        <label for="update_true">True</label>
+                        <input type="radio" id="update_false" name="update" value="false" checked>
+                        <label for="update_false">False</label>
+                    </div>
+                </div>
+                <div class="horizontal-line"></div>
+                <div class="form-group">
+                    <label for="vector_store">Vector Store:</label>
+                    <div>
+                        <input type="radio" id="vector_store_pinecone" name="vector_store" value="pinecone" checked>
+                        <label for="vector_store_pinecone">Pinecone</label>
+                        <input type="radio" id="vector_store_chromadb" name="vector_store" value="chromadb">
+                        <label for="vector_store_chromadb">ChromaDB</label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="compress">Compress:</label>
+                    <div>
+                        <input type="radio" id="compress_true" name="compress" value="true" onchange="toggleModelNameCompressor()">
+                        <label for="compress_true">True</label>
+                        <input type="radio" id="compress_false" name="compress" value="false" checked onchange="toggleModelNameCompressor()">
+                        <label for="compress_false">False</label>
 
+                    </div>
+                </div>
+                <div class="horizontal-line"></div>
+                <div class="form-group">
+                    <label for="model_name_compressor">Model Name Compressor:</label>
+                    <div>
+                        <select id="model_name_compressor" name="model_name_compressor" class="form-control">
+                            <option value="text-davinci-003">text-davinci-003</option>
+                            <option value="text-davinci-002">text-davinci-002</option>
+                            <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
+                            <option value="gpt-3.5-turbo-0301">gpt-3.5-turbo-0301</option>
+                            <option value="text-curie-001">text-curie-001</option>
+                            <option value="gpt-4">gpt-4</option>
+                            <option value="gpt-4-0314">gpt-4-0314</option>
+                            <option value="gpt-4-32k">gpt-4-32k</option>
+                            <option value="gpt-4-32k-0314">gpt-4-32k-0314</option>
+                        </select>
+                    </div>
                 </div>
             </div>
-            <div class="horizontal-line"></div>
-            <div class="form-group">
-                <label for="model_name_compressor">Model Name Compressor:</label>
-                <div>
-                    <select id="model_name_compressor" name="model_name_compressor" class="form-control">
-                        <option value="text-davinci-003">text-davinci-003</option>
-                        <option value="text-davinci-002">text-davinci-002</option>
-                        <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
-                        <option value="gpt-3.5-turbo-0301">gpt-3.5-turbo-0301</option>
-                        <option value="text-curie-001">text-curie-001</option>
-                        <option value="gpt-4">gpt-4</option>
-                        <option value="gpt-4-0314">gpt-4-0314</option>
-                        <option value="gpt-4-32k">gpt-4-32k</option>
-                        <option value="gpt-4-32k-0314">gpt-4-32k-0314</option>
-                    </select>
-                </div>
-            </div>
-            <button type="submit" class="btn btn-primary">Submit</button>
+            <button type="submit" class="btn btn-primary submit-button">Start Chat</button>
         </form>
     </div>
 </body>

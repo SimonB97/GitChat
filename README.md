@@ -40,7 +40,7 @@ To use GitChat, follow these steps:
     - Questions are answered based on the relevant context
 - Easily Customizable Options for LLM, Vectorstore and retrieval method
 
-#### Configuration options
+### Configuration options
 
 - *LLMs*
     - Models:
@@ -57,7 +57,10 @@ To use GitChat, follow these steps:
         - ChromaDB
         - ... more added soon (Weaviate, Elasticsearch, ...)
     - Document Retrieval methods:
+        - HybridSearch (currently only available for Pinecone)
         - several options here
+
+> Although I will likely add a bunch of options in the future, (obviously) I do not have the time to add all of the ones available in LangChain. So this won't be some kind of "sandbox".  Nevertheless, I will still try to make it as customizable as possible (focusing on the most promising, latest features offered by LangChain regarding Vectorstores, LLMs and Document Retrieval), as Document Retrieval use cases vary a lot and I want to make it as easy as possible to try out different combinations for the best results.
 
 
 ## Contribution
