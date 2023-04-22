@@ -1,4 +1,6 @@
-- some parameters like temperature into chat ui
+IMPORTANT:
+- fix download of sources when using chromadb
+
 - handling multiple indexes in one vectorstore
 - handling multiple vectorstoretypes
 - selecting filetypes to download by checkboxes; additionaly, groups of filetypes
