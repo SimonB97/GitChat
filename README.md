@@ -11,6 +11,10 @@ To install GitChat, follow these steps:
     `pip install -r requirements.txt`
 3. Run the chatbot using `python flask_app.py`.
 
+## Prerequisites
+
+- copy `.env.example` to `.env` and fill in the required fields.
+
 ## Usage
 
 To use GitChat, follow these steps:
@@ -22,7 +26,31 @@ To use GitChat, follow these steps:
 
 ## Features
 
-- 
+- Question Answering powered by OpenAI LLMs (and others to come)
+- Chat History (AI has short term memory, like ChatGPT)
+- Text sections of files relevant to the question are passed to the AI as context
+    - Questions are answered based on the relevant context
+- Easily Customizable Options for LLM, Vectorstore and retrieval method
+
+#### Configuration options
+
+- *LLMs*
+    - Models:
+        - OpenAI-models: GPT-3.5-Turbo, GPT-4
+        - ... other models coming soon (Vicuna etc.)
+    - Parameters:
+        - Temperature
+        - ... more added soon
+    - Chat History (Memory):
+        - Length (number of messages) of chat to be "remembered" by the AI
+- *Vectorstores*
+    - Providers:
+        - Pinecone
+        - ChromaDB
+        - ... more added soon (Weaviate, Elasticsearch, ...)
+    - Document Retrieval methods:
+        - several options here
+
 
 ## Contribution
 
