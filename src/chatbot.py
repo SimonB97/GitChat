@@ -68,7 +68,7 @@ def wait_on_index_pine(index: str):
     sleep(5)    
 
 
-def check_update(update, sources_filename, index_name):
+def check_update(update, sources_filename, index_name, vectorstore):
     print(f"Update is set to {update}")
     if update == "true":
         # Remove sources file if it exists
@@ -77,9 +77,16 @@ def check_update(update, sources_filename, index_name):
             os.remove(sources_filename)
 
         # Remove index if it exists
-        if index_name in pinecone.list_indexes() or index_name in C:
+        # pinecone
+        if index_name in pinecone.list_indexes() and vectorstore == "pinecone":
             print("Deleting index because update is set to True")
             pinecone.delete_index(index_name)
+        # chroma
+        pers_dir_chroma = f'./../data/chroma/{index_name}'
+        existing_indexes_chroma = os.listdir(pers_dir_chroma + "./../")
+        if index_name in existing_indexes_chroma and vectorstore == "chroma":
+            print("Deleting chroma index because update is set to True")
+            os.remove(pers_dir_chroma)
 
         # Remove bm25_values file if it exists
         if os.path.isfile("../data/bm25_values.json"):
@@ -206,7 +213,7 @@ def create_or_load_index_chroma(index_name, embeddings, text_splitter, loader):
 
     if index_name in existing_indexes:
         print(f"Index already exists. No need to create it. Loading index {index_name}.")
-        vectordb = Chroma(
+        index = Chroma(
             persist_directory=persist_directory, 
             embedding_function=embeddings
             )
@@ -214,16 +221,16 @@ def create_or_load_index_chroma(index_name, embeddings, text_splitter, loader):
         print(f"Index does not exist. Creating index {index_name}")
         documents = loader.load()
         docs = text_splitter.split_documents(documents)
-        vectordb = Chroma.from_documents(
+        index = Chroma.from_documents(
             documents=docs, 
             embedding=embeddings, 
             persist_directory=persist_directory, 
             metadatas=[{"source": f"{i}-pl"} for i in range(len(docs))]
             )
-        vectordb.persist()
+        index.persist()
         print(f"Index {index_name} created and persisted")
 
-    return vectordb
+    return index
 
 
 def get_bm25_encoder():
@@ -375,7 +382,7 @@ def initialize_chatbot(model_name, top_k, temperature, mem_window_k, alpha, repo
     index_name = get_index_name(repo_owner, repo_name, subdirectory)
     print(f"index loaded. (name: {index_name})")
 
-    check_update(update, sources_filename, index_name)
+    check_update(update, sources_filename, index_name, vector_store)
     print("update checked")
     load_sources(sources_filename, repo_url)
 
