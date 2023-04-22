@@ -2,6 +2,10 @@
 
 GitChat is a chatbot that helps users to get insights into GitHub repositories. It is designed to provide interactive assistance and support for users working with files in a GitHub repository. By integrating chat capabilities, the chatbot can help users  understand code and answer questions related to the project. The chatbot utilizes OpenAI LLMs, Langchain and Pinecone
 
+## Disclaimer
+
+This project is still in development and is not ready for production use.
+
 ## Installation
 
 To install GitChat, follow these steps:
@@ -9,7 +13,8 @@ To install GitChat, follow these steps:
 1. Clone the repository to your local machine.
 2. Install the required dependencies using: \
     `pip install -r requirements.txt`
-3. Run the chatbot using `python flask_app.py`.
+3. Navigate to the `src` directory.
+4. Run the chatbot using `python app.py`.
 
 ## Prerequisites
 
@@ -19,10 +24,13 @@ To install GitChat, follow these steps:
 
 To use GitChat, follow these steps:
 
-1. Start the application by running `python flask_app.py`.
-2. This will open a web browser and navigate to the start page (http://{ip_address}:5000/start - ip_address is the ip address of the machine running the application, will be automatically detected)
-3. Fill in the required fields on the start page and click "Submit" to initialize the chatbot.
-4. Once the chatbot is initialized, you will be redirected to the main chat interface.
+1. **Start the application** by running `python app.py`.
+2. This will open a web browser and **navigate to the start page** (http://\<your-ip-address>:5000/start - your-ip-address is the ip address of the machine running the application, will be automatically detected)
+3. **Fill in the required fields** on the start page and click **Submit** to initialize the chatbot. 
+ (Note: Depending on the size of the repository and the Vectorestore used, this may take a few minutes.)
+4. Once the chatbot is initialized, you will be redirected to the **main chat interface**.
+5. Send Messages using **Send** button or **Enter** key.
+6. Clear the Chat History using the **Clear** button.
 
 ## Features
 
