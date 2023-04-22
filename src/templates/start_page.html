@@ -4,6 +4,10 @@
 <head>
     <title>Start Page</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/qtip2/3.0.3/jquery.qtip.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qtip2/3.0.3/jquery.qtip.min.js"></script>
+
     
     <style>
         body {
@@ -99,6 +103,21 @@
         document.addEventListener("DOMContentLoaded", function() {
             toggleModelNameCompressor();
         });
+        $(document).ready(function() {
+            $('.info-icon').qtip({
+                content: {
+                    attr: 'data-tooltip'
+                },
+                style: {
+                    classes: 'qtip-bootstrap'
+                },
+                position: {
+                    my: 'bottom center',
+                    at: 'top center'
+                }
+            });
+        });
+
     </script>
 </head>
 
@@ -107,11 +126,11 @@
         <h2>Enter the parameters</h2>
         <form method="POST" action="{{ url_for('start') }}">
             <div class="form-group">
-                <label for="repo_url">Repo URL:</label>
+                <label for="repo_url">Repo URL: <i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="Enter the repository URL here [https://github.com/<owner_name>/<repo_name>]. (e.g. [https://github.com/hwchase17/langchain])"></i></label>
                 <input type="text" class="form-control" id="repo_url" name="repo_url" value="https://github.com/hwchase17/langchain" required>
             </div>
             <div class="form-group">
-                <label for="subdirectory">Subdirectory:</label>
+                <label for="subdirectory">Subdirectory: <i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="Enter the subdirectory of the repository here. (e.g. [docs])"></i></label>
                 <input type="text" class="form-control" id="subdirectory" name="subdirectory" value="None" required>
             </div>
             <div class="horizontal-line"></div>

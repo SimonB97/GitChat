@@ -31,6 +31,7 @@ from langchain.vectorstores import Chroma
 
 
 def load_environment_variables():
+    print("Loading environment variables")
     load_dotenv()
 
 
@@ -365,7 +366,6 @@ def chatbot_response(user_input, generate_answer, memory, chain, retriever):
 
 def initialize_chatbot(model_name, top_k, temperature, mem_window_k, alpha, repo_url, subdirectory, update, vector_store="pinecone", compress=False, model_name_compressor="text-davinci-003"):
     load_environment_variables()
-    print("environment variables loaded")
 
     print(f"Parameters: \n\tmodel_name: {model_name}\n\ttop_k: {top_k}\n\ttemperature: {temperature}\n\tmem_window_k: {mem_window_k}\n\talpha: {alpha}\n\trepo_url: {repo_url}\n\tsubdirectory: {subdirectory}\n\tupdate: {update}")
     repo_owner, repo_name, subdirectory = get_github_info(repo_url)

@@ -18,11 +18,16 @@ app = Flask(__name__)
 def start():
     if request.method == "POST":
         # Get the user's input from the form
-        repo_url = request.form["repo_url"]
-        print(f"repo url in request without subdirectory: {repo_url}")
+        repo_url_without_subdir = request.form["repo_url"]
+        print(f"repo url in request without subdirectory: {repo_url_without_subdir}")
         subdirectory = request.form["subdirectory"]
         if subdirectory != "None":
-            repo_url = os.path.join(repo_url, "/", subdirectory)
+            print(f"subdirectory: {subdirectory}")
+            repo_url = f"{repo_url_without_subdir}/{subdirectory}"
+            print(f"repo url in request with subdirectory: {repo_url}")
+        else:
+            print("No subdirectory")
+            repo_url = repo_url_without_subdir
         mem_window_k = request.form["mem_window_k"]
         temperature = request.form["temperature"]
         model_name = request.form["model_name"]
