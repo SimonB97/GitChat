@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Start Page</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+    <style>
+        body {
+            font-family: 'Soehne', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            background: #202123;
+            color: #f0f0f0;
+        }
+
+        h1 {
+            font-weight: bold;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        .form-control {
+            background-color: #40414f;
+            color: #f0f0f0;
+            border: none;
+            border-radius: 10px;
+        }
+
+        .form-control:focus {
+            outline: none;
+            color: #f0f0f0;
+            box-shadow: none;
+        }
+
+        .btn-primary {
+            background-color: #1a9476;
+            border: none;
+            border-radius: 10px;
+            color: #f0f0f0;
+        }
+
+        .btn-primary:hover {
+            background-color: #198d6d;
+        }
+
+        .container {
+            max-width: 800px;
+        }
+
+        .form-group {
+            display: inline-block;
+            vertical-align: top;
+            position: relative;
+            padding: 0 20px;
+            width: 49%;
+            box-sizing: border-box;
+        }
+
+        /* .form-group::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            right: 0;
+            height: 100%;
+            width: 1px;
+            background-color: #ccc;
+        } */
+
+        .form-group:nth-child(2n)::after {
+            display: none;
+        }
+
+        .form-group:nth-child(2n+1) {
+            clear: left;
+        }
+
+        .horizontal-line {
+            width: 100%;
+            height: 2px;
+            background-color: #383838;
+            margin: 20px 0;
+        }
+
+    </style>
+    <script>
+        function updateSliderValue(slider, output) {
+            document.getElementById(output).innerHTML = slider.value;
+        }
+        function toggleModelNameCompressor() {
+            var compressTrue = document.getElementById("compress_true");
+            var modelNameCompressor = document.getElementById("model_name_compressor").parentNode.parentNode;
+            if (compressTrue.checked) {
+                modelNameCompressor.style.display = "inline-block";
+            } else {
+                modelNameCompressor.style.display = "none";
+            }
+        }
+        document.addEventListener("DOMContentLoaded", function() {
+            toggleModelNameCompressor();
+        });
+    </script>
+</head>
+
+<body>
+    <div class="container">
+        <h2>Enter the parameters</h2>
+        <form method="POST" action="{{ url_for('start') }}">
+            <div class="form-group">
+                <label for="repo_url">Repo URL:</label>
+                <input type="text" class="form-control" id="repo_url" name="repo_url" value="https://github.com/hwchase17/langchain" required>
+            </div>
+            <div class="form-group">
+                <label for="subdirectory">Subdirectory:</label>
+                <input type="text" class="form-control" id="subdirectory" name="subdirectory" value="None" required>
+            </div>
+            <div class="horizontal-line"></div>
+            <div class="form-group">
+                <label for="mem_window_k">Memory Window (k):</label>
+                <input type="range" class="form-control" id="mem_window_k" name="mem_window_k" min="0" max="40" step="1" value="6" oninput="updateSliderValue(this, 'mem_window_k_output')" required>
+                <span id="mem_window_k_output">6</span>
+            </div>
+            <div class="form-group">
+                <label for="alpha">Alpha:</label>
+                <input type="range" class="form-control" id="alpha" name="alpha" min="0.1" max="0.9" step="0.1" value="0.5" oninput="updateSliderValue(this, 'alpha_output')" required>
+                <span id="alpha_output">0.5</span>
+            </div>
+            <div class="horizontal-line"></div>
+            <div class="form-group">
+                <label for="temperature">Temperature:</label>
+                <input type="range" class="form-control" id="temperature" name="temperature" min="0" max="2" step="0.1" value="0.2" oninput="updateSliderValue(this, 'temperature_output')" required>
+                <span id="temperature_output">0.2</span>
+            </div>
+            <div class="form-group">
+                <label for="model_name">Model Name:</label>
+                <div>
+                    <input type="radio" id="gpt-3.5-turbo" name="model_name" value="gpt-3.5-turbo" checked>
+                    <label for="gpt-3.5-turbo">gpt-3.5-turbo</label>
+                    <input type="radio" id="gpt-4" name="model_name" value="gpt-4">
+                    <label for="gpt-4">gpt-4</label>
+                </div>
+            </div>
+            <div class="horizontal-line"></div>
+            <div class="form-group">
+                <label for="top_k">Top K:</label>
+                <input type="range" class="form-control" id="top_k" name="top_k" min="0" max="40" step="1" value="6" oninput="updateSliderValue(this, 'top_k_output')" required>
+                <span id="top_k_output">6</span>
+            </div>
+            <div class="form-group">
+                <label for="update">Update:</label>
+                <div>
+                    <input type="radio" id="update_true" name="update" value="true">
+                    <label for="update_true">True</label>
+                    <input type="radio" id="update_false" name="update" value="false" checked>
+                    <label for="update_false">False</label>
+                </div>
+            </div>
+            <div class="horizontal-line"></div>
+            <div class="form-group">
+                <label for="vector_store">Vector Store:</label>
+                <div>
+                    <input type="radio" id="vector_store_pinecone" name="vector_store" value="pinecone" checked>
+                    <label for="vector_store_pinecone">Pinecone</label>
+                    <input type="radio" id="vector_store_chromadb" name="vector_store" value="chromadb">
+                    <label for="vector_store_chromadb">ChromaDB</label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="compress">Compress:</label>
+                <div>
+                    <input type="radio" id="compress_true" name="compress" value="true" onchange="toggleModelNameCompressor()">
+                    <label for="compress_true">True</label>
+                    <input type="radio" id="compress_false" name="compress" value="false" checked onchange="toggleModelNameCompressor()">
+                    <label for="compress_false">False</label>
+
+                </div>
+            </div>
+            <div class="horizontal-line"></div>
+            <div class="form-group">
+                <label for="model_name_compressor">Model Name Compressor:</label>
+                <div>
+                    <select id="model_name_compressor" name="model_name_compressor" class="form-control">
+                        <option value="text-davinci-003">text-davinci-003</option>
+                        <option value="text-davinci-002">text-davinci-002</option>
+                        <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
+                        <option value="gpt-3.5-turbo-0301">gpt-3.5-turbo-0301</option>
+                        <option value="text-curie-001">text-curie-001</option>
+                        <option value="gpt-4">gpt-4</option>
+                        <option value="gpt-4-0314">gpt-4-0314</option>
+                        <option value="gpt-4-32k">gpt-4-32k</option>
+                        <option value="gpt-4-32k-0314">gpt-4-32k-0314</option>
+                    </select>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+    </div>
+</body>
+
+</html>

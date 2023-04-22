@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html>
+
+<head lang="en">
+    <link rel="icon" type="image/png" href="https://git-scm.com/images/logos/downloads/Git-Icon-White.png" />
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/styles/vs2015.min.css">
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/autosize.js/4.0.2/autosize.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/1.9.1/showdown.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gotta GitChat</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+    <style>
+    
+        ::-webkit-scrollbar-track {
+            background-color: transparent;
+        }
+    
+        ::-webkit-scrollbar-thumb {
+            background-color: #ccc;
+            border-radius: 10px;
+        }
+    
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: #aaa;
+        }
+    
+        ::-webkit-scrollbar-track:hover {
+            background-color: #f2f2f2;
+        }
+    
+        ::-webkit-scrollbar-corner {
+            background-color: transparent;
+        }
+    
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+    
+        html {
+            background: #202123;
+        }
+    
+        body {
+            font-family: 'Soehne', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            background: #202123;
+            overflow: hidden;
+        }
+    
+        h3 {
+            font-weight: 600;
+            margin-top: 8px;
+            margin-bottom: 2px;
+        }
+    
+        .fixed-panel {
+            min-height: 540px;
+            max-height: 550px;
+            background-color: #343541;
+            color: #f0f0f0;
+            overflow: auto;
+            border-radius: 10px;
+        }
+
+        .media {
+            margin-top: 0px;
+        }
+    
+        .media-list {
+            overflow: auto;
+            clear: both;
+            display: table;
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+            word-break: normal;
+            line-break: strict;
+        }
+    
+        .media-body {
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 15px;
+
+        }
+
+        .border {
+            border: #444654 3px solid;
+            border-radius: 10px;
+        }
+
+        .media-body pre {
+            background-color: #343541;
+            color: #343541;
+            border: #343541;
+            margin: 0px;
+            padding: 0px;
+            margin-bottom: 10px;
+        }
+
+    
+        .panel {
+            margin-bottom: 20px;
+            background-color: #202123;
+            border: 6px solid transparent;
+            border-radius: 25px;
+            -webkit-box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
+            box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
+        }
+    
+        .panel-info {
+            border-color: #202123;
+        }
+    
+        .panel-info>.panel-heading {
+            color: #f0f0f0;
+            background-color: #202123;
+            border-color: #202123;
+            font-weight: bold;
+        }
+    
+        .panel-footer {
+            padding: 0px 15px;
+            background-color: #202123;
+            border-top: 1px solid #202123;
+            border-bottom-right-radius: 3px;
+            border-bottom-left-radius: 3px;
+        }
+    
+        .btn-info {
+            background-color: #1a9476;
+        }
+
+        .vertical-line {
+            height: 100%;
+            width: 2px;
+            background-color: #26c49d;
+            margin: 0 10px;
+        }
+    
+        #text_input {
+            resize: none;
+            background-color: #40414f;
+            color: #f0f0f0;
+            border: none;
+            border-radius: 10px;
+            padding: 10px;
+        }
+    
+        #text_input:focus {
+            outline: none;
+            color: #f0f0f0;
+            box-shadow: none;
+        }
+
+        #header-icon {
+            height: 1em;
+            width: 1em;
+            margin-right: 0.3em;
+            vertical-align: middle;
+        }
+
+    
+        .input-group-btn button {
+            background-color: #1a9476;
+            border: none;
+            border-radius: 10px;
+            color: #f0f0f0;
+            padding: 10px;
+            margin-left: 10px;
+        }
+    
+        .input-group-btn button:hover {
+            background-color: #198d6d;
+        }
+
+        #circleG {
+            position: relative;
+            z-index: 0;
+            background-color: #202123;
+            padding: 0px;
+            display: none;
+        }
+
+        .circleG{
+            background-color:#343541;
+            float:left;
+            height:7px;
+            margin-left:4px;
+            width:7px;
+            animation-name:bounce_circleG;
+                -o-animation-name:bounce_circleG;
+                -ms-animation-name:bounce_circleG;
+                -webkit-animation-name:bounce_circleG;
+                -moz-animation-name:bounce_circleG;
+            animation-duration:1.6575s;
+                -o-animation-duration:1.6575s;
+                -ms-animation-duration:1.6575s;
+                -webkit-animation-duration:1.6575s;
+                -moz-animation-duration:1.6575s;
+            animation-iteration-count:infinite;
+                -o-animation-iteration-count:infinite;
+                -ms-animation-iteration-count:infinite;
+                -webkit-animation-iteration-count:infinite;
+                -moz-animation-iteration-count:infinite;
+            animation-direction:normal;
+                -o-animation-direction:normal;
+                -ms-animation-direction:normal;
+                -webkit-animation-direction:normal;
+                -moz-animation-direction:normal;
+            border-radius:5px;
+                -o-border-radius:5px;
+                -ms-border-radius:5px;
+                -webkit-border-radius:5px;
+                -moz-border-radius:5px;
+        }
+
+        #circleG_1{
+            animation-delay:0.3295s;
+                -o-animation-delay:0.3295s;
+                -ms-animation-delay:0.3295s;
+                -webkit-animation-delay:0.3295s;
+                -moz-animation-delay:0.3295s;
+        }
+
+        #circleG_2{
+            animation-delay:0.7755s;
+                -o-animation-delay:0.7755s;
+                -ms-animation-delay:0.7755s;
+                -webkit-animation-delay:0.7755s;
+                -moz-animation-delay:0.7755s;
+        }
+
+        #circleG_3{
+            animation-delay:0.9985s;
+                -o-animation-delay:0.9985s;
+                -ms-animation-delay:0.9985s;
+                -webkit-animation-delay:0.9985s;
+                -moz-animation-delay:0.9985s;
+        }
+
+
+
+        @keyframes bounce_circleG{
+            0%{}
+
+            50%{
+                background-color:#444654;
+            }
+
+            100%{}
+        }
+
+        @-o-keyframes bounce_circleG{
+            0%{}
+
+            50%{
+                background-color:#444654;
+            }
+
+            100%{}
+        }
+
+        @-ms-keyframes bounce_circleG{
+            0%{}
+
+            50%{
+                background-color:#444654;
+            }
+
+            100%{}
+        }
+
+        @-webkit-keyframes bounce_circleG{
+            0%{}
+
+            50%{
+                background-color:#444654;
+            }
+
+            100%{}
+        }
+
+        @-moz-keyframes bounce_circleG{
+            0%{}
+
+            50%{
+                background-color:#444654;
+            }
+
+            100%{}
+        }
+
+        #chatPanel {
+            position: relative;
+        }
+
+        .circle-container {
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+
+    </style>
+    
+</head>
+
+<body>
+    <div class="container">
+        <div class="row">
+            <h3 class="text-center" style="color: #f0f0f0;">
+                <img id="header-icon" src="https://git-scm.com/images/logos/downloads/Git-Icon-White.png" alt="GitChat Icon">
+                GitChat
+            </h3>            
+            <div class="col-md-10 col-md-offset-1">
+                <div id="chatPanel" class="panel panel-info">
+                    <div class="panel-body fixed-panel">
+                        <ul class="media-list">
+                        </ul>
+                    </div>
+                    <div class="circle-container">
+                        <div id="circleG">
+                            <div id="circleG_1" class="circleG"></div>
+                            <div id="circleG_2" class="circleG"></div>
+                            <div id="circleG_3" class="circleG"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="panel-footer">
+                        <form method="post" id="chatbot-form">
+                            <div class="input-group">
+                                <textarea class="form-control" placeholder="Enter Message" name="text_input" id="text_input" rows="1" style="max-height: 7em;" autofocus></textarea>
+                                <span class="input-group-btn">
+                                    <button class="btn btn-info" type="button" id="chatbot-form-btn">Send</button>
+                                    <div class="vertical-line"></div>
+                                    <button class="btn btn-info" type="button" id="chatbot-form-btn-clear">Clear memory</button>
+                                </span>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+    <script>
+        $(function () {
+            // Create a Showdown converter
+            var converter = new showdown.Converter();
+
+            $('#chatbot-form-btn').click(function (e) {
+                e.preventDefault();
+                $('#chatbot-form').submit();
+            });
+            $('#chatbot-form-btn-clear').click(function (e) {
+                e.preventDefault();
+                $('#chatPanel').find('.media-list').html('');
+                
+                // Send an AJAX request to the /clear_memory route
+                $.ajax({
+                    type: "POST",
+                    url: "/clear_memory",
+                    success: function (response) {
+                        console.log("Memory cleared successfully");
+                    },
+                    error: function (error) {
+                        console.log("Error clearing memory:", error);
+                    }
+                });
+            });
+
+            // Add event listener for keypress on the textarea
+            $('#text_input').on('keypress', function (e) {
+                if (e.which === 13 && !e.shiftKey) { // Check if Enter key is pressed and Shift key is not pressed
+                    e.preventDefault();
+                    $('#chatbot-form').submit();
+                }
+            });
+
+            $('#chatbot-form').submit(function (e) {
+                e.preventDefault();
+                var message = $('#text_input').val();
+
+                // Check if the input is empty to avoid sending an empty request
+                if (message.trim() === '') {
+                    return;
+                }
+
+                $(".media-list").append(
+                    '<li class="media"><div class="media-body"><div class="media"><div style = "text-align:right; color : #f0f0f0; background-color: #444654" class="media-body">' +
+                    message + '</div></div></div></li>');
+
+                // Clear the text field immediately after submission
+                $('#text_input').val('');
+
+                $('#circleG').show();
+
+                $.ajax({
+                    type: "POST",
+                    url: "/",
+                    data: {text_input: message}, // Pass the saved message as data
+                    success: function (response) {
+                        var answer = response.response;
+
+                        // Convert the response to HTML using Showdown
+                        var answerHtml = converter.makeHtml(answer);
+
+                        // Create a temporary element to hold the HTML content
+                        const tempEl = document.createElement('div');
+                        tempEl.innerHTML = answerHtml;
+
+                        // Apply syntax highlighting to code blocks
+                        tempEl.querySelectorAll('pre>code').forEach(codeElement => {
+                            hljs.highlightElement(codeElement);
+                        });
+
+                        // Retrieve the updated HTML content
+                        answerHtml = tempEl.innerHTML;
+
+                        $(".media-list").append(
+                            '<li class="media"><div class="media-body"><div class="media border"><div style = "color : #f0f0f0; background-color: #343541" class="media-body">' +
+                            answerHtml + '</div></div></div></li>');
+                        setTimeout(function() {
+                            $(".fixed-panel").scrollTop($(".fixed-panel")[0].scrollHeight);
+                        }, 100);
+
+                        $('#circleG').hide();
+                    },
+
+                    error: function (error) {
+                        console.log(error);
+                        $('#circleG').hide();
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>
