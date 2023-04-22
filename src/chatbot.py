@@ -77,7 +77,7 @@ def check_update(update, sources_filename, index_name):
             os.remove(sources_filename)
 
         # Remove index if it exists
-        if index_name in pinecone.list_indexes():
+        if index_name in pinecone.list_indexes() or index_name in C:
             print("Deleting index because update is set to True")
             pinecone.delete_index(index_name)
 
@@ -202,6 +202,7 @@ def create_or_load_index_pine(index_name, embeddings, text_splitter, loader):
 def create_or_load_index_chroma(index_name, embeddings, text_splitter, loader):
     persist_directory = f'./../data/chroma/{index_name}'
     existing_indexes = os.listdir(persist_directory + "./../")
+    print(f"Existing indexes: {existing_indexes}")
 
     if index_name in existing_indexes:
         print(f"Index already exists. No need to create it. Loading index {index_name}.")
