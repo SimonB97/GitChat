@@ -67,10 +67,11 @@
             width: 49%;
             box-sizing: border-box;
             margin:0px;
+            margin-bottom: 15px;
         }
 
         .form-group-textarea {
-            margin-bottom: 10px;
+            margin-bottom: 25px;
             margin-top: 10px;
         }
 
@@ -88,6 +89,7 @@
             height: 2px;
             background-color: #383838;
             margin: 10px 0;
+            margin-top: 0px;
             margin-left: 6%;
             margin-right: 7%;
         }
@@ -114,9 +116,19 @@
 
         input[type="radio"]{
             margin-top: 11px;
-            margin-left: 15px;
+            margin-left: 25px;
         }
 
+        .slider-container {
+            display: flex;
+            align-items: center;
+            margin-right: 10px;
+        }
+
+        .slider-container input[type="range"] {
+            flex-grow: 1;
+            margin-right: 20px;
+        }
 
     </style>
     <script>
@@ -167,7 +179,7 @@
 
 <body>
     <div class="container">
-        <h2>Enter the parameters</h2>
+        <h2>GitChat Configuration</h2>
         <form method="POST" action="{{ url_for('start') }}">
             <div class="form-options"></div>
                 <div class="form-group form-group-textarea">
@@ -190,34 +202,9 @@
                 </div>
                 <div class="form-group">
                     <label for="temperature">Temperature:</label>
-                    <input type="range" class="form-control" id="temperature" name="temperature" min="0" max="2" step="0.1" value="0.2" oninput="updateSliderValue(this, 'temperature_output')" required>
-                    <span id="temperature_output">0.2</span>
-                </div>
-                <div class="horizontal-line"></div>
-                <div class="form-group">
-                    <label for="mem_window_k">Chat Memory Length: <i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="Enter the memory window size here. This determines how many of the latest messages should be kept in the AIs memory."></i></label>
-                    <input type="range" class="form-control" id="mem_window_k" name="mem_window_k" min="0" max="40" step="1" value="6" oninput="updateSliderValue(this, 'mem_window_k_output')" required>
-                    <span id="mem_window_k_output">6</span>
-                </div>
-                <div id="alpha_form" class="form-group">
-                    <label for="alpha">Alpha:</label>
-                    <input type="range" class="form-control" id="alpha" name="alpha" min="0.1" max="0.9" step="0.1" value="0.5" oninput="updateSliderValue(this, 'alpha_output')" required>
-                    <span id="alpha_output">0.5</span>
-                </div>
-                <div class="horizontal-line"></div>
-                
-                <div class="form-group">
-                    <label for="top_k">Top K:</label>
-                    <input type="range" class="form-control" id="top_k" name="top_k" min="0" max="40" step="1" value="6" oninput="updateSliderValue(this, 'top_k_output')" required>
-                    <span id="top_k_output">6</span>
-                </div>
-                <div class="form-group">
-                    <label for="update">Update:</label>
-                    <div>
-                        <input type="radio" id="update_true" name="update" value="true">
-                        <label for="update_true">True</label>
-                        <input type="radio" id="update_false" name="update" value="false" checked>
-                        <label for="update_false">False</label>
+                    <div class="slider-container">
+                        <input type="range" class="form-control" id="temperature" name="temperature" min="0" max="2" step="0.1" value="0.2" oninput="updateSliderValue(this, 'temperature_output')" required>
+                        <span id="temperature_output">0.2</span>
                     </div>
                 </div>
                 <div class="horizontal-line"></div>
@@ -231,6 +218,37 @@
                     </div>
                 </div>
                 <div class="form-group">
+                    <label for="update">Update:</label>
+                    <div>
+                        <input type="radio" id="update_true" name="update" value="true">
+                        <label for="update_true">True</label>
+                        <input type="radio" id="update_false" name="update" value="false" checked>
+                        <label for="update_false">False</label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="top_k">Top K:</label>
+                    <div class="slider-container">
+                        <input type="range" class="form-control" id="top_k" name="top_k" min="0" max="40" step="1" value="6" oninput="updateSliderValue(this, 'top_k_output')" required>
+                        <span id="top_k_output">6</span>
+                    </div>
+                </div>
+                <div id="alpha_form" class="form-group">
+                    <label for="alpha">Alpha:</label>
+                    <div class="slider-container">
+                        <input type="range" class="form-control" id="alpha" name="alpha" min="0.1" max="0.9" step="0.1" value="0.5" oninput="updateSliderValue(this, 'alpha_output')" required>
+                        <span id="alpha_output">0.5</span>
+                    </div>
+                </div>
+                <div class="horizontal-line"></div>
+                <div class="form-group">
+                    <label for="mem_window_k">Chat Memory Length: <i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="Enter the memory window size here. This determines how many of the latest messages should be kept in the AIs memory."></i></label>
+                    <div class="slider-container">
+                        <input type="range" class="form-control" id="mem_window_k" name="mem_window_k" min="0" max="40" step="1" value="6" oninput="updateSliderValue(this, 'mem_window_k_output')" required>
+                        <span id="mem_window_k_output">6</span>
+                    </div>
+                </div>                
+                <div class="form-group">
                     <label for="compress">Compress:</label>
                     <div>
                         <input type="radio" id="compress_true" name="compress" value="true" onchange="toggleModelNameCompressor()">
@@ -240,8 +258,7 @@
 
                     </div>
                 </div>
-                <div class="horizontal-line"></div>
-                <div class="form-group">
+                <div class="form-group form-group-textarea">
                     <label for="model_name_compressor">Model Name Compressor:</label>
                     <div>
                         <select id="model_name_compressor" name="model_name_compressor" class="form-control">
@@ -257,6 +274,7 @@
                         </select>
                     </div>
                 </div>
+                <div class="horizontal-line"></div>
             </div>
             <button type="submit" class="btn btn-primary submit-button">Start Chat</button>
         </form>
