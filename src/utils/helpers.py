@@ -4,6 +4,7 @@ import re
 import os
 import nbformat
 from nbconvert import MarkdownExporter
+import charset_normalizer
 
 from langchain.docstore.document import Document
 from langchain.schema import HumanMessage, AIMessage
@@ -122,8 +123,15 @@ def convert_rst_to_md(filepath):
     
 # py to md
 def convert_py_to_md(filepath):
-    with open(filepath, "r", encoding='utf-8', errors='replace') as py_file:
-        code = py_file.read()
+    with open(filepath, "rb") as file:
+        content = file.read()
+
+    result = charset_normalizer.detect(content)
+    encoding = result["encoding"]
+    print(f'Encoding: {encoding}')
+
+    with open(filepath, "r", encoding=encoding) as file:
+        code = file.read()
     
     md_content = f"python\n{code}\n"
     print(f'Successfully converted {filepath} to markdown')
