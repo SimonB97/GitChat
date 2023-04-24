@@ -163,6 +163,10 @@
             vertical-align: middle;
         }
 
+        .input-group .form-control:first-child {
+            border-bottom-right-radius: 0 !important;
+            border-top-right-radius: 0 !important;
+        }
     
         .input-group-btn button {
             background-color: #1a9476;
@@ -174,7 +178,7 @@
         }
     
         .input-group-btn button:hover {
-            background-color: #198d6d;
+            background-color: #157258;
         }
 
         #circleG {
@@ -409,7 +413,7 @@
                     url: "/",
                     data: {text_input: message}, // Pass the saved message as data
                     success: function (response) {
-                        var answer = response.response;
+                        var answer = response; // Change this line
 
                         // Convert the response to HTML using Showdown
                         var answerHtml = converter.makeHtml(answer);

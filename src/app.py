@@ -1,7 +1,8 @@
 import os
 import webbrowser
 import socket
-from flask import Flask, redirect, request, render_template, jsonify, url_for
+from flask import Flask, redirect, request, render_template, jsonify, url_for, stream_with_context, Response
+
 from chatbot import generate_answer, chatbot_response, initialize_chatbot
 
 def get_ip_address():
@@ -9,8 +10,9 @@ def get_ip_address():
     ip_address = socket.gethostbyname(hostname)
     return ip_address
 
+
 # Initialize the chatbot
-chain, retriever, memory = None, None, None
+chain, retriever, memory, provide_sources = None, None, None, None
 
 app = Flask(__name__)
 
@@ -37,6 +39,8 @@ def start():
         vector_store = request.form["vector_store"]
         compress = request.form["compress"]
         model_name_compressor = request.form["model_name_compressor"]
+        global provide_sources
+        provide_sources = request.form["provide_sources"]
 
         print(f"repo url in request complete: {repo_url}")
 
@@ -44,26 +48,45 @@ def start():
 
         # initiazlize the chatbot and store the variables in the global scope
         global chain, retriever, memory
-        chain, retriever, memory = initialize_chatbot(model_name, top_k, temperature, mem_window_k, alpha, repo_url, subdirectory, update, vector_store, compress, model_name_compressor)
+        chain, retriever, memory = initialize_chatbot(model_name, top_k, temperature, mem_window_k, alpha, repo_url, subdirectory, update, vector_store, compress, model_name_compressor, provide_sources)
 
         return redirect(url_for("index"))
     return render_template("start_page.html")
 
 
+# @app.route("/", methods=["GET", "POST"])
+# def index():
+#     if request.method == "POST":
+#         text_input = request.form["text_input"]
+#         response = chatbot_response(
+#             text_input, 
+#             generate_answer,
+#             memory,
+#             chain,
+#             retriever,
+#             provide_sources
+#             )
+#         return jsonify(response=response)
+
+#     return render_template("index.html")
+
+
+# first attempt at streaming
 @app.route("/", methods=["GET", "POST"])
 def index():
     if request.method == "POST":
         text_input = request.form["text_input"]
-        response = chatbot_response(
-            text_input, 
-            generate_answer,
-            memory,
-            chain,
-            retriever
-            )
-        return jsonify(response=response)
+
+        def generate(text_input):
+            for token in chatbot_response(text_input, generate_answer, memory, chain, retriever, provide_sources):
+                print(token)
+                yield token
+
+        return Response(stream_with_context(generate(text_input)), content_type='text/plain')
 
     return render_template("index.html")
+
+
 
 
 @app.route("/clear_memory", methods=["POST"])

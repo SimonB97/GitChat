@@ -8,3 +8,4 @@ IMPORTANT:
 - add streaming of responses
 - fix update function
 - automatic text encoding recognition (https://charset-normalizer.readthedocs.io/en/latest/)
+- finish qa with sources chain support

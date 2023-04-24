@@ -19,6 +19,7 @@ To install GitChat, follow these steps:
 ## Prerequisites
 
 - copy `.env.example` to `.env` and fill in the required fields.
+    - only the keys to providers being used are required
 
 ## Usage
 

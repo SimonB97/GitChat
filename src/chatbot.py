@@ -16,6 +16,8 @@ from langchain.callbacks.base import CallbackManager
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain import OpenAI, PromptTemplate, LLMChain
 from langchain.retrievers import PineconeHybridSearchRetriever
+from langchain.chains.qa_with_sources import load_qa_with_sources_chain
+from langchain.chains import RetrievalQAWithSourcesChain
 from langchain.prompts.chat import (
     ChatPromptTemplate,
     HumanMessagePromptTemplate,
@@ -85,11 +87,11 @@ def check_update(update, sources_filename, index_name, vectorstore):
         pers_dir_chroma = f'./../data/chroma/{index_name}'
         existing_indexes_chroma = os.listdir(pers_dir_chroma + "./../")
         if index_name in existing_indexes_chroma and vectorstore == "chroma":
-            print("Deleting chroma index because update is set to True")
+            print("Deleting chroma index because update is set to True")   
             os.remove(pers_dir_chroma)
 
         # Remove bm25_values file if it exists
-        if os.path.isfile("../data/bm25_values.json"):
+        if os.path.isfile("../data/bm25_values.json") and vectorstore == "pinecone":
             print("Deleting bm25_values file because update is set to True")
             os.remove("../data/bm25_values.json")
     else:
@@ -157,7 +159,12 @@ def create_or_load_index_pine(index_name, embeddings, text_splitter, loader):
                 doc.metadata["context"] = doc.page_content
             print("docs created")
             print(f"Indexing {len(docs)} docs into index {index_name}. This may take a while...")
-            Pinecone.from_documents(docs, embedding=embeddings, index_name=index_name)
+            Pinecone.from_documents(
+                docs, 
+                embedding=embeddings, 
+                index_name=index_name, 
+                # metadatas=[{"source": f"{i}-pl"} for i in range(len(docs))]   # for sources retrieval?
+                )
             print("docs indexed")
             corpus = []
             for doc in docs:
@@ -190,8 +197,6 @@ def create_or_load_index_pine(index_name, embeddings, text_splitter, loader):
             doc.metadata["context"] = doc.page_content
         print("docs created")
         print(f"Indexing {len(docs)} docs into index {index_name}. This may take a while...")
-
-        # TODO: wait for index to be ready
         index_stats = index.describe_index_stats()
         print(f"Index {index_name} stats:\n\t{index_stats}")
 
@@ -225,7 +230,7 @@ def create_or_load_index_chroma(index_name, embeddings, text_splitter, loader):
             documents=docs, 
             embedding=embeddings, 
             persist_directory=persist_directory, 
-            metadatas=[{"source": f"{i}-pl"} for i in range(len(docs))]
+            metadatas=[{"source": f"{i}-pl"} for i in range(len(docs))]   # for sources retrieval?
             )
         index.persist()
         print(f"Index {index_name} created and persisted")
@@ -271,8 +276,9 @@ def get_retriever(embeddings, index, bm25_encoder, top_k, alpha, vector_store, c
 
 
 def get_system_message_prompt_template():
-    system_message_template = """You are a helpful, nice assistant. You strive to give the user help tailored to their specific REQUIREMENTS. If you come up with code, lways handle generated code as input and provide hints for potential errors. Give advice primarily based on the CONTEXT if relevant. If available, take into account the CHAT HISTORY. In addition to providing an answer, also return a score (between 0 and 100) indicating how fully it meets the user's requirements. Format your answer using markdown.
-    If the user doesn't provide any requirements in that sense, you can assume that they want to chat with you, be nice. If the user doesn't provide any chat history, you can assume that this is the first interaction. If the context doesn't quite fit to the user's requirements, you can assume that the question is either unrelated to the context and that this was intended by the user, or that the user should try to rephrase their question.
+    system_message_template = """Given the following extracted parts of a long document and a question, create a final answer with references ("SOURCES"). If you come up with code, always handle generated code as input and provide hints for potential errors. Give advice primarily based on the CONTEXT if relevant. If available, take into account the CHAT HISTORY. In addition to providing an answer, also return a score (between 0 and 100) indicating how fully it meets the user's requirements. Format your answer using markdown.
+    If the user doesn't provide any requirements in that sense, you can assume that they want to chat with you, be nice. If you don't know the answer, just say that you don't know. Don't try to make up an answer.
+    ALWAYS return a "SOURCES" part in your answer.
     
     the information will be organized like this:
     
@@ -302,7 +308,7 @@ def get_prompt_template():
     ---- END of CHAT HISTORY ----
 
     ==== START of CONTEXT ====
-    {context}
+    {summaries}
     ==== END of CONTEXT ====
 
     :::: START of REQUIREMENTS ::::
@@ -312,7 +318,7 @@ def get_prompt_template():
     Score:"""
 
     PROMPT = PromptTemplate(
-        template=prompt_template, input_variables=["context", "requirements", "chat_history"]
+        template=prompt_template, input_variables=["summaries", "requirements", "chat_history"]
     )
     return PROMPT
 
@@ -337,42 +343,110 @@ def get_memory(mem_window_k):
     return memory
 
 
-def get_chain(chat, chat_prompt_template, memory):
-    chain = LLMChain(llm=chat, prompt=chat_prompt_template, memory=memory)
+def get_chain(chat, chat_prompt_template, memory, provide_sources):
+    if provide_sources == "true":
+        print("Using chain with sources (currently under construction)")
+        chain = load_qa_with_sources_chain(llm=chat, prompt=chat_prompt_template, memory=memory, verbose=True)
+    else:
+        print("Using chain without sources")
+        chain = LLMChain(llm=chat, prompt=chat_prompt_template, memory=memory)
     return chain
 
 
 # generate answer 
-def generate_answer(user_input, chain, retriever, memory):
+# def generate_answer(user_input, chain, retriever, memory, provide_sources):
+#     chat_history = memory.load_memory_variables({})
+#     docs = retriever.get_relevant_documents(user_input)
+#     context = "\n".join([doc.page_content for doc in docs])
+#     if provide_sources == "false":
+#         # Generate answer with NO sources
+#         inputs = [{"summaries": context, 
+#                    "requirements": user_input, 
+#                    "chat_history": chat_history,
+#                    }]
+#         answer = chain.apply(inputs)
+#     else:
+#         # Generate answer with sources
+#         answer = chain({"input_documents": docs, 
+#                         "question": user_input,
+#                         "chat_history": chat_history,
+#                         "requirements": user_input}, 
+#                         return_only_outputs=True
+#                         )
+#     # Save messages to chat history
+#     memory.save_context({"input": user_input}, {"output": answer[0]["text"]})
+#     print(answer)
+#     return answer, context
+
+# generate answer - returns generator for answer
+def generate_answer(user_input, chain, retriever, memory, provide_sources):
     chat_history = memory.load_memory_variables({})
     docs = retriever.get_relevant_documents(user_input)
     context = "\n".join([doc.page_content for doc in docs])
-    inputs = [{"context": context, "requirements": user_input, "chat_history": chat_history}]
-    answer = chain.apply(inputs)
+    if provide_sources == "false":
+        # Generate answer with NO sources
+        inputs = [{"summaries": context, 
+                   "requirements": user_input, 
+                   "chat_history": chat_history,
+                   }]
+        answer = chain.apply(inputs)
+    else:
+        # Generate answer with sources
+        answer = chain({"input_documents": docs, 
+                        "question": user_input,
+                        "chat_history": chat_history,
+                        "requirements": user_input}, 
+                        return_only_outputs=True
+                        )
+    # Save messages to chat history
     memory.save_context({"input": user_input}, {"output": answer[0]["text"]})
-    print(answer)
-    return answer, context
+
+    # Create a generator for tokens
+    def token_generator():
+        for token in answer[0]["text"]:
+            yield token
+
+    return token_generator(), context
+
     
 
 # chatbot response 
-def chatbot_response(user_input, generate_answer, memory, chain, retriever):
+# def chatbot_response(user_input, generate_answer, memory, chain, retriever, provide_sources):
 
-    answer, context = generate_answer(user_input, chain, retriever, memory)
+#     answer, context = generate_answer(user_input, chain, retriever, memory, provide_sources)
+    
+#     with open(f"chat_msgs/questions_and_contexts.md", "w", encoding="utf-8", errors='replace') as qc_file:
+#         qc_file.write(f"History:\n\n{memory.load_memory_variables({})}\n\nQuestion: {user_input}\n\nContext:\n{context}\n")
+    
+#     with open(f"chat_msgs/answers.md", "w", encoding="utf-8", errors='replace') as ans_file:
+#         ans_file.write(answer[0]['text'])
+
+#     with open(f"chat_msgs/history.md", "w", encoding="utf-8", errors='replace') as hist_file:
+#         hist_file.write(str(memory.load_memory_variables({})))
+    
+#     return answer[0]['text']
+
+
+# chatbot response - returns generator for answer
+def chatbot_response(user_input, generate_answer, memory, chain, retriever, provide_sources):
+
+    answer_generator, context = generate_answer(user_input, chain, retriever, memory, provide_sources)
     
     with open(f"chat_msgs/questions_and_contexts.md", "w", encoding="utf-8", errors='replace') as qc_file:
         qc_file.write(f"History:\n\n{memory.load_memory_variables({})}\n\nQuestion: {user_input}\n\nContext:\n{context}\n")
     
     with open(f"chat_msgs/answers.md", "w", encoding="utf-8", errors='replace') as ans_file:
-        ans_file.write(answer[0]['text'])
+        for token in answer_generator:
+            ans_file.write(token)
+            yield token
 
     with open(f"chat_msgs/history.md", "w", encoding="utf-8", errors='replace') as hist_file:
         hist_file.write(str(memory.load_memory_variables({})))
-    
-    return answer[0]['text']
 
 
 
-def initialize_chatbot(model_name, top_k, temperature, mem_window_k, alpha, repo_url, subdirectory, update, vector_store="pinecone", compress=False, model_name_compressor="text-davinci-003"):
+
+def initialize_chatbot(model_name, top_k, temperature, mem_window_k, alpha, repo_url, subdirectory, update, vector_store="pinecone", compress=False, model_name_compressor="text-davinci-003", provide_sources="false"):
     load_environment_variables()
 
     print(f"Parameters: \n\tmodel_name: {model_name}\n\ttop_k: {top_k}\n\ttemperature: {temperature}\n\tmem_window_k: {mem_window_k}\n\talpha: {alpha}\n\trepo_url: {repo_url}\n\tsubdirectory: {subdirectory}\n\tupdate: {update}")
@@ -403,17 +477,18 @@ def initialize_chatbot(model_name, top_k, temperature, mem_window_k, alpha, repo
         print("creating or loading index")
         index = create_or_load_index_pine(index_name, embeddings, text_splitter, loader)
         print("index created or loaded")
+        print("getting bm25 encoder")
+        bm25_encoder = get_bm25_encoder()
+        print("bm25 encoder loaded")
     elif vector_store == "chromadb":
         # ChromaDB
         print("initializing chromadb")
         index = create_or_load_index_chroma(index_name, embeddings, text_splitter, loader)
-        print("ChromaDB not supported yet. Please use Pinecone.")
     else:
         raise ValueError(f"vector_store {vector_store} not supported.")
-
-    print("getting bm25 encoder")
-    bm25_encoder = get_bm25_encoder()
-    print("bm25 encoder loaded")
+    
+    if vector_store != "pinecone":
+        bm25_encoder = None
     print("getting retriever")
     retriever = get_retriever(embeddings, index, bm25_encoder, top_k, alpha, vector_store, compress, model_name_compressor)
     print("retriever loaded")
@@ -425,7 +500,7 @@ def initialize_chatbot(model_name, top_k, temperature, mem_window_k, alpha, repo
     callback_manager = get_callback_manager()
     chat = get_chat_model(temperature, model_name, callback_manager)
     memory = get_memory(mem_window_k)
-    chain = get_chain(chat, chat_prompt_template, memory)
+    chain = get_chain(chat, chat_prompt_template, memory, provide_sources)
     print("chain loaded")
 
     return chain, retriever, memory
