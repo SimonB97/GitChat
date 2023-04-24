@@ -18,6 +18,11 @@
             font-family: 'DM Sans', sans-serif;
             background: #202123;
             color: #f0f0f0;
+            background-image: url('.\\..\\..\\data\\images\\background.png');
+            background-repeat: no-repeat;
+            background-position: center center;
+            background-attachment: fixed;
+            background-size: cover;
         }
 
         h1 {
@@ -242,7 +247,7 @@
                     </div>
                 </div>
                 <div id="alpha_form" class="form-group">
-                    <label for="alpha">Alpha: <i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="The alpha parameter controls the weighting between the dense and sparse vector search scores when Hybrid Search is used, which is currently the only search option for Pinecone. (see https://www.pinecone.io/learn/hybrid-search-intro/) 
+                    <label for="alpha">Alpha: <i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="The alpha parameter controls the weighting between the dense and sparse vector search scores when Hybrid Search is used, which is currently the only search option for Pinecone. (see: https://www.pinecone.io/learn/hybrid-search-intro/) 
                     [1 -> Dense Search, 0 -> Sparse Search, 0.5 -> Hybrid Search] Advice: Use higher values for documents that are likely similar to the training domain of the LLM. Use lower values for documents with domain-specific language (e.g. Code, Medical Research Papers)" ></i></label>
                     <div class="slider-container">
                         <input type="range" class="form-control" id="alpha" name="alpha" min="0.1" max="0.9" step="0.1" value="0.5" oninput="updateSliderValue(this, 'alpha_output')" required>
