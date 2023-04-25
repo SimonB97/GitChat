@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Start Page</title>
+    <link rel="icon" type="image/png" href="https://git-scm.com/images/logos/downloads/Git-Icon-White.png" />
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/qtip2/3.0.3/jquery.qtip.min.css" />
@@ -16,17 +16,28 @@
     <style>
         body {
             font-family: 'DM Sans', sans-serif;
-            background: #202123;
-            color: #f0f0f0;
-            background-image: url('.\\..\\..\\data\\images\\background.png');
+            background: #292727db;
+            color: #ffffff;
+            background-image: url('{{ url_for("static", filename="images/background-3-us.jpg") }}');
             background-repeat: no-repeat;
             background-position: center center;
             background-attachment: fixed;
             background-size: cover;
+            background-blend-mode: color;
         }
 
-        h1 {
+        h2 {
             font-weight: bold;
+            margin-bottom: 25px;
+            text-shadow: 6px 5px 8px #13131393;
+        }
+
+        #header-icon {
+            height: 0.9em;
+            width: 0.9em;
+            margin-right: 0.2em;
+            margin-bottom: 0.2em;
+            /* box-shadow: 5px 5px 5px #13131385; */
         }
 
         label {
@@ -40,7 +51,7 @@
         }
 
         .form-control {
-            background-color: #40414f;
+            background-color: #cafdf127;
             color: #f0f0f0;
             border: none;
             border-radius: 10px;
@@ -60,6 +71,7 @@
             color: #f0f0f0;
             padding: 10px 15px;
             font-size: 16px;
+            box-shadow: 3px 2px 9px rgba(40, 40, 40, 0.368);
         }
 
         .btn-primary:hover {
@@ -98,7 +110,7 @@
             position: relative;
             max-width: 85%;
             height: 2px;
-            background-color: #383838;
+            background-color: #cdc7c719;
             margin: 10px 0;
             margin-top: 0px;
             margin-left: 6%;
@@ -121,13 +133,14 @@
         @media (max-width: 767px) {
             .form-group {
                 width: 100%;
-                padding: 0 0 20px 0;
+                padding: 0 0 20px;
             }
         }
 
         input[type="radio"]{
             margin-top: 11px;
             margin-left: 25px;
+            background-color: rgba(255, 255, 255, 0.345) !important;
         }
 
         .slider-container {
@@ -139,8 +152,12 @@
         .slider-container input[type="range"] {
             flex-grow: 1;
             margin-right: 20px;
+            box-shadow: none;
         }
 
+        .glyphicon {
+            color: #d3d3d357;
+        }
         
 
     </style>
@@ -181,8 +198,8 @@
                     classes: 'qtip-bootstrap'
                 },
                 position: {
-                    my: 'left center',
-                    at: 'right center'
+                    my: 'top center',
+                    at: 'bottom center'
                 }
             });
         });
@@ -192,20 +209,24 @@
 
 <body>
     <div class="container">
-        <h2>GitChat Configuration</h2>
+        <h2 class="text-center" style="color: #f0f0f0;">
+            <img id="header-icon" src="https://git-scm.com/images/logos/downloads/Git-Icon-White.png" alt="GitChat Icon">
+            GitChat - Configuration
+        </h2>   
         <form method="POST" action="{{ url_for('start') }}">
             <div class="form-options"></div>
+            <div class="horizontal-line"></div>
                 <div class="form-group form-group-textarea">
-                    <label for="repo_url">Repo URL: <i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="Enter the repository URL here [https://github.com/owner_name/repo_name]. (e.g. [https://github.com/hwchase17/langchain])"></i></label>
-                    <input type="text" class="form-control" id="repo_url" name="repo_url" value="https://github.com/hwchase17/langchain" required>
+                    <label for="repo_url">Repo URL: <i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="Enter the repository URL here [https://github.com/owner_name/repo_name]. (e.g. [https://github.com/SimonB97/GitChat])"></i></label>
+                    <input type="text" class="form-control" id="repo_url" name="repo_url" placeholder="https://github.com/SimonB97/GitChat" required>
                 </div>
                 <div class="form-group form-group-textarea">
                     <label for="subdirectory">Subdirectory: <i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="Enter the subdirectory of the repository or None (to load the whole repository) here. (e.g. [docs])"></i></label>
-                    <input type="text" class="form-control" id="subdirectory" name="subdirectory" value="None" required>
+                    <input type="text" class="form-control" id="subdirectory" name="subdirectory" placeholder="path/to/dir">
                 </div>
                 <div class="horizontal-line"></div>
                 <div class="form-group">
-                    <label for="model_name">Model Name:</label>
+                    <label for="model_name">Model Name: <i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="Select the model for Question Answering here. | GPT-4: most capable, slower | GPT-3.5-turbo: very capable, very fast"></i></label>
                     <div>
                         <input type="radio" id="gpt-3.5-turbo" name="model_name" value="gpt-3.5-turbo" checked>
                         <label for="gpt-3.5-turbo">GPT-3.5-turbo</label>
@@ -214,7 +235,7 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="temperature">Temperature:</label>
+                    <label for="temperature">Temperature: <i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic."></i></label>
                     <div class="slider-container">
                         <input type="range" class="form-control" id="temperature" name="temperature" min="0" max="2" step="0.1" value="0.2" oninput="updateSliderValue(this, 'temperature_output')" required>
                         <span id="temperature_output">0.2</span>
@@ -227,7 +248,7 @@
                         <input type="radio" id="vector_store_pinecone" name="vector_store" value="pinecone" checked>
                         <label for="vector_store_pinecone">Pinecone</label>
                         <input type="radio" id="vector_store_chromadb" name="vector_store" value="chromadb">
-                        <label for="vector_store_chromadb">ChromaDB</label>
+                        <label for="vector_store_chromadb">Chroma</label>
                     </div>
                 </div>
                 <div class="form-group">
@@ -295,6 +316,7 @@
                         <label for="provide_sources_true">True</label>
                         <input type="radio" id="provide_sources_false" name="provide_sources" value="false" checked>
                         <label for="provide_sources_false">False</label>
+                    </div>
                 </div>
                 <div class="horizontal-line"></div>
             </div>

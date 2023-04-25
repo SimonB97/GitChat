@@ -23,7 +23,7 @@ def start():
         repo_url_without_subdir = request.form["repo_url"]
         print(f"repo url in request without subdirectory: {repo_url_without_subdir}")
         subdirectory = request.form["subdirectory"]
-        if subdirectory != "None":
+        if subdirectory != "None" and subdirectory != "":
             print(f"subdirectory: {subdirectory}")
             repo_url = f"{repo_url_without_subdir}/{subdirectory}"
             print(f"repo url in request with subdirectory: {repo_url}")
@@ -99,4 +99,8 @@ if __name__ == "__main__":
     ip_address = get_ip_address()
     url = f"http://{ip_address}:5000/start"
     webbrowser.open_new(url)
-    app.run(debug=True, host=ip_address)
+    app.run(
+        debug=True,
+        # host=ip_address
+        host="0.0.0.0"
+        )
