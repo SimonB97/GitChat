@@ -42,9 +42,7 @@ def start():
         global provide_sources
         provide_sources = request.form["provide_sources"]
 
-        print(f"repo url in request complete: {repo_url}")
-
-        # chain, retriever, memory = initialize_chatbot(model_name, top_k, temperature, mem_window_k, alpha, repo_url, subdirectory, update)
+        print(f"repo url in request (complete): {repo_url}")
 
         # initiazlize the chatbot and store the variables in the global scope
         global chain, retriever, memory
@@ -54,24 +52,7 @@ def start():
     return render_template("start_page.html")
 
 
-# @app.route("/", methods=["GET", "POST"])
-# def index():
-#     if request.method == "POST":
-#         text_input = request.form["text_input"]
-#         response = chatbot_response(
-#             text_input, 
-#             generate_answer,
-#             memory,
-#             chain,
-#             retriever,
-#             provide_sources
-#             )
-#         return jsonify(response=response)
-
-#     return render_template("index.html")
-
-
-# first attempt at streaming
+# Route for handling the chatbot
 @app.route("/", methods=["GET", "POST"])
 def index():
     if request.method == "POST":
@@ -87,8 +68,6 @@ def index():
     return render_template("index.html")
 
 
-
-
 @app.route("/clear_memory", methods=["POST"])
 def clear_memory():
     memory.clear()
@@ -100,7 +79,7 @@ if __name__ == "__main__":
     url = f"http://{ip_address}:5000/start"
     webbrowser.open_new(url)
     app.run(
-        debug=True,
+        # debug=True,
         # host=ip_address
-        host="0.0.0.0"
+        host="0.0.0.0"  # TODO: security issue
         )

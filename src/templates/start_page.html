@@ -6,6 +6,7 @@
     <link rel="icon" type="image/png" href="https://git-scm.com/images/logos/downloads/Git-Icon-White.png" />
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- TODO: get another qtip version that stays active until clicking away -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/qtip2/3.0.3/jquery.qtip.min.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qtip2/3.0.3/jquery.qtip.min.js"></script>
 
@@ -37,17 +38,15 @@
             width: 0.9em;
             margin-right: 0.2em;
             margin-bottom: 0.2em;
-            /* box-shadow: 5px 5px 5px #13131385; */
         }
 
         label {
-            font-weight: bold;
+            /* font-weight: bold; */
             font-size: 16px;
         }
 
         .info-icon {
             margin-left: 5px;
-            
         }
 
         .form-control {
@@ -153,15 +152,27 @@
             flex-grow: 1;
             margin-right: 20px;
             box-shadow: none;
+            padding: 0px 0px;
         }
 
         .glyphicon {
             color: #d3d3d357;
         }
         
+        .qtip-bootstrap {
+            width: max-content;
+            max-width: 500px;
+        }
+
 
     </style>
     <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var headerIcon = document.getElementById('header-icon');
+            headerIcon.style.filter = 'drop-shadow(6px 5px 8px #13131393)';
+        });
+
+
         function updateSliderValue(slider, output) {
             document.getElementById(output).innerHTML = slider.value;
         }
@@ -199,8 +210,22 @@
                 },
                 position: {
                     my: 'top center',
-                    at: 'bottom center'
-                }
+                    at: 'bottom center',
+                    adjust: {
+                        method: 'shift'
+                    },
+                },
+                show: {
+                    event: 'mouseenter',
+                    effect: function() { $(this).fadeIn(250); },
+                    solo: true
+                },
+                hide: {
+                    event: 'unfocus',
+                    effect: function() { $(this).fadeOut(250); }
+                },
+
+
             });
         });
     </script>
@@ -217,16 +242,16 @@
             <div class="form-options"></div>
             <div class="horizontal-line"></div>
                 <div class="form-group form-group-textarea">
-                    <label for="repo_url">Repo URL: <i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="Enter the repository URL here [https://github.com/owner_name/repo_name]. (e.g. [https://github.com/SimonB97/GitChat])"></i></label>
+                    <label for="repo_url">Repo URL: <i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="Enter the repository URL here. <br><br>For example: <br> https://github.com/SimonB97/GitChat"></i></label>
                     <input type="text" class="form-control" id="repo_url" name="repo_url" placeholder="https://github.com/SimonB97/GitChat" required>
                 </div>
                 <div class="form-group form-group-textarea">
-                    <label for="subdirectory">Subdirectory: <i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="Enter the subdirectory of the repository or None (to load the whole repository) here. (e.g. [docs])"></i></label>
+                    <label for="subdirectory">Subdirectory: <i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="Enter the subdirectory of the repository or leave blank to load the whole repository.<br><br> For example: <br>src/templates"></i></label>
                     <input type="text" class="form-control" id="subdirectory" name="subdirectory" placeholder="path/to/dir">
                 </div>
                 <div class="horizontal-line"></div>
                 <div class="form-group">
-                    <label for="model_name">Model Name: <i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="Select the model for Question Answering here. | GPT-4: most capable, slower | GPT-3.5-turbo: very capable, very fast"></i></label>
+                    <label for="model_name">Model Name: <i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="Select the model for Question Answering here. <br><br> GPT-4: most capable, slower <br> GPT-3.5-turbo: very capable, very fast"></i></label>
                     <div>
                         <input type="radio" id="gpt-3.5-turbo" name="model_name" value="gpt-3.5-turbo" checked>
                         <label for="gpt-3.5-turbo">GPT-3.5-turbo</label>
@@ -235,7 +260,7 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="temperature">Temperature: <i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic."></i></label>
+                    <label for="temperature">Temperature: <i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="What sampling temperature to use, between 0 and 2. <br><br>Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic."></i></label>
                     <div class="slider-container">
                         <input type="range" class="form-control" id="temperature" name="temperature" min="0" max="2" step="0.1" value="0.2" oninput="updateSliderValue(this, 'temperature_output')" required>
                         <span id="temperature_output">0.2</span>
@@ -243,7 +268,7 @@
                 </div>
                 <div class="horizontal-line"></div>
                 <div class="form-group">
-                    <label for="vector_store">Vector Store:</label>
+                    <label for="vector_store">Vector Store: <i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="Select the vector store to use here. <br><br>    Pinecone (cloud): best results, limited *requires API key* <br>Chroma (local): free, unlimited local indexes"></i></label>
                     <div>
                         <input type="radio" id="vector_store_pinecone" name="vector_store" value="pinecone" checked>
                         <label for="vector_store_pinecone">Pinecone</label>
@@ -252,7 +277,7 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="update">Update:</label>
+                    <label for="update">Update: <i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="Whether to update the vector store with the latest data, will take longer to load."></i></label>
                     <div>
                         <input type="radio" id="update_true" name="update" value="true">
                         <label for="update_true">True</label>
@@ -261,7 +286,7 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="top_k">Top K:</label>
+                    <label for="top_k">Top K: <i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="The number of chunks to return by the document retriever. <br><br> Note:  Depending on the chunk size and context window size of the model, too high values might fill up the context window, which leads to the LLM 'forgetting' some earlier lines of text. I suggest to try something between 5 and 15. (Chunk size is currently hardcoded: 1000 characters)"></i></label>
                     <div class="slider-container">
                         <input type="range" class="form-control" id="top_k" name="top_k" min="1" max="30" step="1" value="6" oninput="updateSliderValue(this, 'top_k_output')" required>
                         <span id="top_k_output">6</span>

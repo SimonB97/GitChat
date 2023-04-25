@@ -1,11 +1,15 @@
-IMPORTANT:
-- fix download of sources when using chromadb
+PRIORITY:
+- fix update function for chroma
 
+IN PROGRESS:
+- finish qa with sources chain support
 
+OTHER:
 - handling multiple indexes in one vectorstore (pinecone)
 - handling multiple vectorstoretypes
 - selecting filetypes to download by checkboxes; additionaly, groups of filetypes
-- add streaming of responses
-- fix update function
-- automatic text encoding recognition (https://charset-normalizer.readthedocs.io/en/latest/)
-- finish qa with sources chain support
+- add streaming of responses (low priority)
+- automatic text encoding recognition (https://charset-normalizer.readthedocs.io/en/latest/) (done for python)
+- finish qa with sources chain support:
+    - display probabilty of each source, so that hybrid search can be fine tuned
+

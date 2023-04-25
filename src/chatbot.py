@@ -65,6 +65,7 @@ def wait_on_index_pine(index: str):
       if desc[7]['ready']:
         return True
     except pinecone.core.client.exceptions.NotFoundException:
+      print("Index not found yet. Waiting...")
       # NotFoundException means the index is created yet.
       pass
     sleep(5)    
@@ -189,7 +190,6 @@ def create_or_load_index_pine(index_name, embeddings, text_splitter, loader):
         print(f"Index {index_name} created")
         print(f"Loading index {index_name}")
         index = pinecone.Index(index_name)
-        print(f"Waiting for index to be ready")
         wait_on_index_pine(index_name)
         print(f"Index {index_name} loaded")
         docs = loader.load_and_split(text_splitter)
