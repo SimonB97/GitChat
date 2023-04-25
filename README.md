@@ -1,4 +1,5 @@
-# GitChat
+<h1 align="center">GitChat</h1>
+
 
 GitChat is a chatbot that helps users to get insights into GitHub repositories. It is designed to provide interactive assistance and support for users working with files in a GitHub repository. By integrating chat capabilities, the chatbot can help users  understand code and answer questions related to the project. The chatbot utilizes OpenAI LLMs, Langchain and Pinecone to provide answers to questions about the repository.
 
