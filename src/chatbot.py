@@ -153,8 +153,8 @@ def get_embeddings():
 
 def get_text_splitter_and_loader(sources_filename):
     text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=1000,
-        chunk_overlap=100
+        chunk_size=1300,
+        chunk_overlap=200
     )
     loader = TextLoader(sources_filename, encoding="utf-8")
     return text_splitter, loader
