@@ -49,8 +49,12 @@ def get_github_docs(repo_url: str):
         repo_path = pathlib.Path(d)
         
         matched_files = list(repo_path.glob("**/*"))
+        venv_files = 0
 
         for file in matched_files:
+            if ".venv" in str(file.parts):
+                venv_files += 1
+                continue
             try:
                 relative_path = file.relative_to(repo_path)
                 github_url = f"https://github.com/{repo_owner}/{repo_name}/blob/{git_sha}/{relative_path}"
@@ -74,6 +78,8 @@ def get_github_docs(repo_url: str):
             except Exception as e:
                 print(f"Error processing file {file}: {e}")
                 continue
+        
+        print(f"Total venv files skipped: {venv_files}")
 
 def extract_github_info(repo_url: str):
     parsed_url = urlparse(repo_url)
