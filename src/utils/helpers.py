@@ -32,17 +32,14 @@ def get_github_docs(repo_url: str):
     repo_owner, repo_name, subdirectory = extract_github_info(repo_url)
     
     with tempfile.TemporaryDirectory() as d:
-        clone_cmd = f"git clone --depth 1 https://github.com/{repo_owner}/{repo_name}.git ."
-        
+        repo_path = pathlib.Path(d)
+
         if subdirectory:
-            clone_cmd += f" --filter=blob:none --no-checkout --sparse"
-        
-        subprocess.check_call(clone_cmd, cwd=d, shell=True)
-        
-        if subdirectory:
-            subprocess.check_call(f"git sparse-checkout init --cone", cwd=d, shell=True)
-            subprocess.check_call(f"git sparse-checkout set {subdirectory}", cwd=d, shell=True)
-            subprocess.check_call(f"git checkout", cwd=d, shell=True)
+            archive_cmd = f"git archive --remote=https://github.com/{repo_owner}/{repo_name}.git HEAD:{subdirectory} | tar -x -C {repo_path}"
+            subprocess.check_call(archive_cmd, shell=True)
+        else:
+            clone_cmd = f"git clone --depth 1 https://github.com/{repo_owner}/{repo_name}/.git ."
+            subprocess.check_call(clone_cmd, cwd=d, shell=True)
         
         git_sha = (
             subprocess.check_output("git rev-parse HEAD", shell=True, cwd=d)
@@ -50,33 +47,33 @@ def get_github_docs(repo_url: str):
             .strip()
         )
         repo_path = pathlib.Path(d)
-        file_patterns = ["*.md", "*.mdx", "*.rst", "*.ipynb", "*.py", "*.yaml", "*.html"]
-        matched_files = []
         
-        for pattern in file_patterns:
-            matched_files.extend(list(repo_path.glob(f"**/{pattern}")))
-        
+        matched_files = list(repo_path.glob("**/*"))
+
         for file in matched_files:
-            with open(file, "r", encoding="utf-8") as f:
+            try:
                 relative_path = file.relative_to(repo_path)
                 github_url = f"https://github.com/{repo_owner}/{repo_name}/blob/{git_sha}/{relative_path}"
                 file_ext = file.suffix.lower()
-                if file_ext in [".md", ".mdx"]:
-                    page_content = f.read()
-                elif file_ext == ".rst":
-                    page_content = helpers.convert_rst_to_md(str(file))
-                elif file_ext == ".ipynb":
-                    page_content = helpers.convert_ipynb_to_md(str(file))
-                elif file_ext == ".py":
-                    page_content = helpers.convert_py_to_md(str(file))
-                # yaml
-                elif file_ext in [".yaml", ".html"]:
-                    page_content = f.read()
-                else:
-                    continue
 
-                if page_content is not None:
-                    yield Document(page_content=page_content, metadata={"source": github_url})
+                # Detect encoding using charset-normalizer
+                encoding = CnM.from_path(file).best().first().encoding
+
+                with open(file, "r", encoding=encoding) as f:
+                    if file_ext == ".rst":
+                        page_content = helpers.convert_rst_to_md(str(file))
+                    elif file_ext == ".ipynb":
+                        page_content = helpers.convert_ipynb_to_md(str(file))
+                    elif file_ext == ".py":
+                        page_content = helpers.convert_py_to_md(str(file))
+                    else:
+                        page_content = helpers.convert_any_to_md(str(file))
+
+                    if page_content is not None:
+                        yield Document(page_content=page_content, metadata={"source": github_url})
+            except Exception as e:
+                print(f"Error processing file {file}: {e}")
+                continue
 
 def extract_github_info(repo_url: str):
     parsed_url = urlparse(repo_url)
@@ -91,8 +88,25 @@ def extract_github_info(repo_url: str):
 
 #----- Convert and output -----#
 
+# any to md
+def convert_any_to_md(filepath):
+    with open(filepath, "rb") as file:
+        content = file.read()
+
+    result = charset_normalizer.detect(content)
+    encoding = result["encoding"]
+    print(f'Encoding: {encoding}')
+
+    with open(filepath, "r", encoding=encoding) as file:
+        encoded_text = file.read()
+    
+    md_content = f"\n{encoded_text}\n"
+    print(f'Successfully converted {filepath} to markdown')
+    return md_content  
+
 # ipynb to md
 def convert_ipynb_to_md(filepath):
+    print(f"trying to convert {filepath}")
     with open(filepath, 'r', encoding='utf-8') as f:
         nb = nbformat.read(f, as_version=4)
         md_exporter = MarkdownExporter()
