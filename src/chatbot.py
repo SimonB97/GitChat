@@ -18,7 +18,7 @@ from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain import OpenAI, PromptTemplate, LLMChain
 from langchain.retrievers import PineconeHybridSearchRetriever
 from langchain.chains.qa_with_sources import load_qa_with_sources_chain
-from langchain.chains import RetrievalQAWithSourcesChain
+from langchain.chains import ConversationalRetrievalChain
 from langchain.prompts.chat import (
     ChatPromptTemplate,
     HumanMessagePromptTemplate,
@@ -273,7 +273,8 @@ def get_retriever(embeddings, index, bm25_encoder, top_k, alpha, vector_store, c
     elif vector_store == "chromadb":
         print("Using ChromaDB retriever")
         # TODO: implement ChromaDB retriever
-        base_retriever = index.as_retriever(search_type="similarity", top_k=top_k)
+        search_type = "mmr"   # "mmr" or "similarity"
+        base_retriever = index.as_retriever(search_type=search_type, top_k=top_k)
     else:
         raise ValueError("Invalid vector store")
     

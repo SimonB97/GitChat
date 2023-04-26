@@ -16,3 +16,8 @@ OTHER:
 - ui: if update: 
     - set chunk size/ overlap
     - file extensions to download
+- search options:
+    - chroma
+        - search_type "mmr" or "similarity"
+    - pinecone
+        - (hybrid search alternatives)
