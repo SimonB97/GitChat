@@ -1,4 +1,5 @@
 import os
+import shutil
 from time import sleep
 from flask import Flask, request, render_template, jsonify, Response, stream_with_context
 import openai
@@ -27,7 +28,7 @@ import pinecone
 import utils.helpers as helpers
 
 from langchain.retrievers import ContextualCompressionRetriever
-from langchain.retrievers.document_compressors import LLMChainExtractor
+from langchain.retrievers.document_compressors import LLMChainExtractor, LLMChainFilter
 
 from langchain.vectorstores import Chroma
 
@@ -72,7 +73,7 @@ def wait_on_index_pine(index: str):
 
 
 def check_update(update, sources_filename, index_name, vectorstore):
-    print(f"Update is set to {update}")
+    print(f"Update is set to {update}\n Vectorstore is set to {vectorstore}")
     if update == "true":
         # Remove sources file if it exists
         if os.path.isfile(sources_filename):
@@ -80,16 +81,30 @@ def check_update(update, sources_filename, index_name, vectorstore):
             os.remove(sources_filename)
 
         # Remove index if it exists
-        # pinecone
-        if index_name in pinecone.list_indexes() and vectorstore == "pinecone":
-            print("Deleting index because update is set to True")
-            pinecone.delete_index(index_name)
-        # chroma
+        
+        # # pinecone
+        # print(pinecone.list_indexes())  # TODO: this function is currently not workin (see github issue), delete index manually for now
+        # if index_name in pinecone.list_indexes() and vectorstore == "pinecone":
+        #     print("Deleting index because update is set to True")
+        #     pinecone.delete_index(index_name)
+
+        # # chroma
+        # pers_dir_chroma = f'./../data/chroma/{index_name}'
+        # existing_indexes_chroma = os.listdir(pers_dir_chroma)
+        # print(f"Existing chroma indexes: {existing_indexes_chroma}")
+        # if index_name in existing_indexes_chroma and vectorstore == "chroma":
+        #     print("Deleting chroma index because update is set to True")   
+        #     os.remove(pers_dir_chroma)
+        #     print(f"Remaining chroma indexes: {os.listdir(pers_dir_chroma + "./../")}")
+
         pers_dir_chroma = f'./../data/chroma/{index_name}'
-        existing_indexes_chroma = os.listdir(pers_dir_chroma + "./../")
-        if index_name in existing_indexes_chroma and vectorstore == "chroma":
+        existing_indexes_chroma = os.listdir('./../data/chroma/')
+        print(f"Existing chroma indexes: {existing_indexes_chroma}")
+        if f"'{index_name}'" in existing_indexes_chroma and vectorstore == "chroma":
             print("Deleting chroma index because update is set to True")   
-            os.remove(pers_dir_chroma)
+            shutil.rmtree(pers_dir_chroma)
+            print(f"Remaining chroma indexes: {os.listdir(pers_dir_chroma)}")
+
 
         # Remove bm25_values file if it exists
         if os.path.isfile("../data/bm25_values.json") and vectorstore == "pinecone":
@@ -146,11 +161,13 @@ def get_text_splitter_and_loader(sources_filename):
 
 
 def create_or_load_index_pine(index_name, embeddings, text_splitter, loader):
-    existing_indexes = pinecone.list_indexes()
+    # existing_indexes = pinecone.list_indexes()   # currently not working
+    existing_indexes = []
     print(f"Existing indexes: {existing_indexes}")
     if index_name in existing_indexes:
         print(f"Index already exists. No need to create it. Loading index {index_name}.")
         index = pinecone.Index(index_name)
+        wait_on_index_pine(index_name)
         n_vectors = index.describe_index_stats()["total_vector_count"]
         print(f"Index {index_name} loaded. It contains {n_vectors} vectors")
         if n_vectors == 0:
@@ -197,8 +214,8 @@ def create_or_load_index_pine(index_name, embeddings, text_splitter, loader):
             doc.metadata["context"] = doc.page_content
         print("docs created")
         print(f"Indexing {len(docs)} docs into index {index_name}. This may take a while...")
-        index_stats = index.describe_index_stats()
-        print(f"Index {index_name} stats:\n\t{index_stats}")
+        # index_stats = index.describe_index_stats()   # currently not working
+        # print(f"Index {index_name} stats:\n\t{index_stats}")
 
         Pinecone.from_documents(docs, embedding=embeddings, index_name=index_name)
         print("docs indexed")
@@ -267,7 +284,8 @@ def get_retriever(embeddings, index, bm25_encoder, top_k, alpha, vector_store, c
         elif model_name in ["gpt-3.5-turbo", "gpt-3.5-turbo-0301", "gpt-4", "gpt-4-0314", "gpt-4-32k", "gpt-4-32k-0314"]:
             llm = ChatOpenAI(model_name = model_name, temperature=0)
         OpenAI()
-        compressor = LLMChainExtractor.from_llm(llm)
+        # compressor = LLMChainExtractor.from_llm(llm)
+        compressor = LLMChainFilter.from_llm(llm)
         retriever = ContextualCompressionRetriever(base_compressor=compressor, base_retriever=base_retriever)
     else:
         retriever = base_retriever
@@ -353,31 +371,6 @@ def get_chain(chat, chat_prompt_template, memory, provide_sources):
     return chain
 
 
-# generate answer 
-# def generate_answer(user_input, chain, retriever, memory, provide_sources):
-#     chat_history = memory.load_memory_variables({})
-#     docs = retriever.get_relevant_documents(user_input)
-#     context = "\n".join([doc.page_content for doc in docs])
-#     if provide_sources == "false":
-#         # Generate answer with NO sources
-#         inputs = [{"summaries": context, 
-#                    "requirements": user_input, 
-#                    "chat_history": chat_history,
-#                    }]
-#         answer = chain.apply(inputs)
-#     else:
-#         # Generate answer with sources
-#         answer = chain({"input_documents": docs, 
-#                         "question": user_input,
-#                         "chat_history": chat_history,
-#                         "requirements": user_input}, 
-#                         return_only_outputs=True
-#                         )
-#     # Save messages to chat history
-#     memory.save_context({"input": user_input}, {"output": answer[0]["text"]})
-#     print(answer)
-#     return answer, context
-
 # generate answer - returns generator for answer
 def generate_answer(user_input, chain, retriever, memory, provide_sources):
     chat_history = memory.load_memory_variables({})
@@ -408,24 +401,6 @@ def generate_answer(user_input, chain, retriever, memory, provide_sources):
 
     return token_generator(), context
 
-    
-
-# chatbot response 
-# def chatbot_response(user_input, generate_answer, memory, chain, retriever, provide_sources):
-
-#     answer, context = generate_answer(user_input, chain, retriever, memory, provide_sources)
-    
-#     with open(f"chat_msgs/questions_and_contexts.md", "w", encoding="utf-8", errors='replace') as qc_file:
-#         qc_file.write(f"History:\n\n{memory.load_memory_variables({})}\n\nQuestion: {user_input}\n\nContext:\n{context}\n")
-    
-#     with open(f"chat_msgs/answers.md", "w", encoding="utf-8", errors='replace') as ans_file:
-#         ans_file.write(answer[0]['text'])
-
-#     with open(f"chat_msgs/history.md", "w", encoding="utf-8", errors='replace') as hist_file:
-#         hist_file.write(str(memory.load_memory_variables({})))
-    
-#     return answer[0]['text']
-
 
 # chatbot response - returns generator for answer
 def chatbot_response(user_input, generate_answer, memory, chain, retriever, provide_sources):
@@ -454,7 +429,7 @@ def initialize_chatbot(model_name, top_k, temperature, mem_window_k, alpha, repo
     sources_filename = get_sources_filename(repo_owner, repo_name, subdirectory)
 
     index_name = get_index_name(repo_owner, repo_name, subdirectory)
-    print(f"index loaded. (name: {index_name})")
+    print(f"index name to be used: {index_name}")
 
     check_update(update, sources_filename, index_name, vector_store)
     print("update checked")

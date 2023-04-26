@@ -1,5 +1,6 @@
+ <!-- start_page.html -->
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Start Page</title>
@@ -41,12 +42,12 @@
         }
 
         label {
-            /* font-weight: bold; */
+            font-weight: 400;
             font-size: 16px;
         }
 
         .info-icon {
-            margin-left: 5px;
+            margin-right: 5px;
         }
 
         .form-control {
@@ -121,6 +122,12 @@
             overflow-y: auto;
             padding-right: 10px;
         }
+/* 
+        .form-control select {
+            background-color: #292727b8;
+            color: #f0f0f0;
+        } */
+
 
         .submit-button {
             position: fixed;
@@ -155,15 +162,53 @@
             padding: 0px 0px;
         }
 
+        .drop-down:focus {
+            outline: none;
+            background-color: #232524ce;
+        }
+
+        .drop-down option {
+            background-color: #17161691;
+        }
+
         .glyphicon {
             color: #d3d3d357;
         }
         
         .qtip-bootstrap {
+            position: absolute;
             width: max-content;
-            max-width: 500px;
+            width: 300px;
+            max-height: 60%;
+            overflow: auto;
+            left: 10%;
         }
 
+        ::-webkit-scrollbar-track {
+            background-color: transparent;
+        }
+    
+        ::-webkit-scrollbar-thumb {
+            background-color: #ccc;
+            border-radius: 10px;
+        }
+    
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: #aaa;
+        }
+    
+        ::-webkit-scrollbar-track:hover {
+            background-color: #f2f2f2;
+        }
+    
+        ::-webkit-scrollbar-corner {
+            background-color: transparent;
+        }
+    
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
 
     </style>
     <script>
@@ -209,23 +254,22 @@
                     classes: 'qtip-bootstrap'
                 },
                 position: {
-                    my: 'top center',
-                    at: 'bottom center',
+                    my: 'top left',
+                    at: 'bottom right',
                     adjust: {
-                        method: 'shift'
+                        method: 'flip (invert adjust.x/y)'
                     },
                 },
                 show: {
-                    event: 'mouseenter',
+                    // on click
+                    event: 'click',
                     effect: function() { $(this).fadeIn(250); },
                     solo: true
                 },
                 hide: {
-                    event: 'unfocus',
+                    event: 'unfocus click',
                     effect: function() { $(this).fadeOut(250); }
                 },
-
-
             });
         });
     </script>
@@ -242,16 +286,16 @@
             <div class="form-options"></div>
             <div class="horizontal-line"></div>
                 <div class="form-group form-group-textarea">
-                    <label for="repo_url">Repo URL: <i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="Enter the repository URL here. <br><br>For example: <br> https://github.com/SimonB97/GitChat"></i></label>
+                    <label for="repo_url"><i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="Enter the repository URL here. <br><br>For example: <br> https://github.com/SimonB97/GitChat"></i> Repo URL: </label>
                     <input type="text" class="form-control" id="repo_url" name="repo_url" placeholder="https://github.com/SimonB97/GitChat" required>
                 </div>
                 <div class="form-group form-group-textarea">
-                    <label for="subdirectory">Subdirectory: <i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="Enter the subdirectory of the repository or leave blank to load the whole repository.<br><br> For example: <br>src/templates"></i></label>
+                    <label for="subdirectory"><i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="Enter the subdirectory of the repository or leave blank to load the whole repository.<br><br> For example: <br>src/templates"></i> Subdirectory: </label>
                     <input type="text" class="form-control" id="subdirectory" name="subdirectory" placeholder="path/to/dir">
                 </div>
                 <div class="horizontal-line"></div>
                 <div class="form-group">
-                    <label for="model_name">Model Name: <i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="Select the model for Question Answering here. <br><br> GPT-4: most capable, slower <br> GPT-3.5-turbo: very capable, very fast"></i></label>
+                    <label for="model_name"><i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="Select the model for Question Answering here. <br><br> GPT-4: most capable, slower <br> GPT-3.5-turbo: very capable, very fast"></i> Model Name: </label>
                     <div>
                         <input type="radio" id="gpt-3.5-turbo" name="model_name" value="gpt-3.5-turbo" checked>
                         <label for="gpt-3.5-turbo">GPT-3.5-turbo</label>
@@ -260,7 +304,7 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="temperature">Temperature: <i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="What sampling temperature to use, between 0 and 2. <br><br>Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic."></i></label>
+                    <label for="temperature"><i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="What sampling temperature to use, between 0 and 2. <br><br>Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic."></i> Temperature: </label>
                     <div class="slider-container">
                         <input type="range" class="form-control" id="temperature" name="temperature" min="0" max="2" step="0.1" value="0.2" oninput="updateSliderValue(this, 'temperature_output')" required>
                         <span id="temperature_output">0.2</span>
@@ -268,7 +312,7 @@
                 </div>
                 <div class="horizontal-line"></div>
                 <div class="form-group">
-                    <label for="vector_store">Vector Store: <i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="Select the vector store to use here. <br><br>    Pinecone (cloud): best results, limited *requires API key* <br>Chroma (local): free, unlimited local indexes"></i></label>
+                    <label for="vector_store"><i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="Select the vector store to use here. <br><br>    Pinecone (cloud): best results, limited *requires API key* <br>Chroma (local): free, unlimited local indexes"></i> Vector Store: </label>
                     <div>
                         <input type="radio" id="vector_store_pinecone" name="vector_store" value="pinecone" checked>
                         <label for="vector_store_pinecone">Pinecone</label>
@@ -277,7 +321,7 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="update">Update: <i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="Whether to update the vector store with the latest data, will take longer to load."></i></label>
+                    <label for="update"><i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="Whether to update the vector store with the latest data, will take longer to load."></i> Update (dysfunctional for Pinecone a.t.m.!): </label>
                     <div>
                         <input type="radio" id="update_true" name="update" value="true">
                         <label for="update_true">True</label>
@@ -286,15 +330,15 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="top_k">Top K: <i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="The number of chunks to return by the document retriever. <br><br> Note:  Depending on the chunk size and context window size of the model, too high values might fill up the context window, which leads to the LLM 'forgetting' some earlier lines of text. I suggest to try something between 5 and 15. (Chunk size is currently hardcoded: 1000 characters)"></i></label>
+                    <label for="top_k"><i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="The number of chunks to return by the document retriever. <br><br> Note:  Depending on the chunk size and context window size of the model, too high values might fill up the context window, which leads to the LLM 'forgetting' some earlier lines of text. I suggest to try something between 5 and 15. (Chunk size is currently hardcoded: 1000 characters)"></i> Top k chunks: </label>
                     <div class="slider-container">
-                        <input type="range" class="form-control" id="top_k" name="top_k" min="1" max="30" step="1" value="6" oninput="updateSliderValue(this, 'top_k_output')" required>
+                        <input type="range" class="form-control" id="top_k" name="top_k" min="1" max="50" step="1" value="8" oninput="updateSliderValue(this, 'top_k_output')" required>
                         <span id="top_k_output">6</span>
                     </div>
                 </div>
                 <div id="alpha_form" class="form-group">
-                    <label for="alpha">Alpha: <i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="The alpha parameter controls the weighting between the dense and sparse vector search scores when Hybrid Search is used, which is currently the only search option for Pinecone. (see: https://www.pinecone.io/learn/hybrid-search-intro/) 
-                    [1 -> Dense Search, 0 -> Sparse Search, 0.5 -> Hybrid Search] Advice: Use higher values for documents that are likely similar to the training domain of the LLM. Use lower values for documents with domain-specific language (e.g. Code, Medical Research Papers)" ></i></label>
+                    <label for="alpha"><i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="The alpha parameter controls the weighting between the dense and sparse vector search scores when Hybrid Search is used, which is currently the only search option for Pinecone. <br>(see: https://www.pinecone.io/learn/hybrid-search-intro/) <br><br>
+                        1 means dense search <br> 0 means sparse search <br> 0.5 means hybrid search <br><br> Advice: Use higher values for documents that are likely similar to the training domain of the LLM. Use lower values for documents with domain-specific language (e.g. medical research rapers, maybe code)" ></i> Alpha: </label>
                     <div class="slider-container">
                         <input type="range" class="form-control" id="alpha" name="alpha" min="0.1" max="0.9" step="0.1" value="0.5" oninput="updateSliderValue(this, 'alpha_output')" required>
                         <span id="alpha_output">0.5</span>
@@ -302,14 +346,14 @@
                 </div>
                 <div class="horizontal-line"></div>
                 <div class="form-group">
-                    <label for="mem_window_k">Chat Memory Length: <i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="Enter the memory window size here. This determines how many of the latest messages should be kept in the AIs memory."></i></label>
+                    <label for="mem_window_k"><i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="Enter the memory window size here. This determines how many of the latest messages should be kept in the AIs memory."></i> Chat Memory Length: </label>
                     <div class="slider-container">
                         <input type="range" class="form-control" id="mem_window_k" name="mem_window_k" min="0" max="40" step="1" value="6" oninput="updateSliderValue(this, 'mem_window_k_output')" required>
                         <span id="mem_window_k_output">6</span>
                     </div>
                 </div>                
                 <div class="form-group">
-                    <label for="compress">Compress:</label>
+                    <label for="compress"><i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="Whether to use the Contextual Compression Retriever from Langchain. <br> This is a tool that uses another retriever (LLM) to get relevant documents for a query, and then applies compressors and document transformers to filter out irrelevant or redundant information and return only the most relevant content to the user. <br><br>Note: This will make repsonse times slower, depending on the model used. <br><br> When enabled, choose a model for compression from the displayed drop-down menu."></i> Compression: </label>
                     <div>
                         <input type="radio" id="compress_true" name="compress" value="true" onchange="toggleModelNameCompressor()">
                         <label for="compress_true">True</label>
@@ -319,9 +363,9 @@
                     </div>
                 </div>
                 <div class="form-group form-group-textarea">
-                    <label for="model_name_compressor">Model Name Compressor:</label>
+                    <label for="model_name_compressor">Compression model:</label>
                     <div>
-                        <select id="model_name_compressor" name="model_name_compressor" class="form-control">
+                        <select id="model_name_compressor" name="model_name_compressor" class="form-control drop-down">
                             <option value="text-davinci-003">text-davinci-003</option>
                             <option value="text-davinci-002">text-davinci-002</option>
                             <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
@@ -335,7 +379,7 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="provide_sources">Provide Sources:</label>
+                    <label for="provide_sources"><i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="Whether to provide sources for the answers. <br><br>Note: WORK IN PROGRESS! Not functional."></i> Provide Sources (dysfunctional): </label>
                     <div>
                         <input type="radio" id="provide_sources_true" name="provide_sources" value="true">
                         <label for="provide_sources_true">True</label>

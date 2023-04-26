@@ -42,6 +42,9 @@ def start():
         global provide_sources
         provide_sources = request.form["provide_sources"]
 
+        # Override sources setting because it is not yet implemented ! REMOVE THIS LINE WHEN IMPLEMENTED !!!
+        provide_sources = "false"
+
         print(f"repo url in request (complete): {repo_url}")
 
         # initiazlize the chatbot and store the variables in the global scope

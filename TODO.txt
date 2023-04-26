@@ -12,4 +12,7 @@ OTHER:
 - automatic text encoding recognition (https://charset-normalizer.readthedocs.io/en/latest/) (done for python)
 - finish qa with sources chain support:
     - display probabilty of each source, so that hybrid search can be fine tuned
-
+- add option to enable/disable providing the whole conversation history together with the question to the doc retriever vs just the question
+- ui: if update: 
+    - set chunk size/ overlap
+    - file extensions to download

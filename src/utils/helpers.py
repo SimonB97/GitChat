@@ -50,7 +50,7 @@ def get_github_docs(repo_url: str):
             .strip()
         )
         repo_path = pathlib.Path(d)
-        file_patterns = ["*.md", "*.mdx", "*.rst", "*.ipynb", "*.py"]
+        file_patterns = ["*.md", "*.mdx", "*.rst", "*.ipynb", "*.py", "*.yaml", "*.html"]
         matched_files = []
         
         for pattern in file_patterns:
@@ -69,6 +69,9 @@ def get_github_docs(repo_url: str):
                     page_content = helpers.convert_ipynb_to_md(str(file))
                 elif file_ext == ".py":
                     page_content = helpers.convert_py_to_md(str(file))
+                # yaml
+                elif file_ext in [".yaml", ".html"]:
+                    page_content = f.read()
                 else:
                     continue
 
