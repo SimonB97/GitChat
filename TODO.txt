@@ -21,3 +21,5 @@ OTHER:
         - search_type "mmr" or "similarity"
     - pinecone
         - (hybrid search alternatives)
+- option to save current parameters to preset
+- loading screen when chatbot is being initialized

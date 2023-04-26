@@ -31,6 +31,7 @@ $(document).ready(function() {
 
     document.getElementById("vector_store_pinecone").addEventListener("change", toggleAlphaForm);
     document.getElementById("vector_store_chromadb").addEventListener("change", toggleAlphaForm);
+    document.getElementById("vector_store_deeplake").addEventListener("change", toggleAlphaForm);
 
     $('.info-icon').qtip({
         content: {

@@ -59,6 +59,8 @@
                         <label for="vector_store_pinecone">Pinecone</label>
                         <input type="radio" id="vector_store_chromadb" name="vector_store" value="chromadb">
                         <label for="vector_store_chromadb">Chroma</label>
+                        <input type="radio" id="vector_store_deeplake" name="vector_store" value="deeplake">
+                        <label for="vector_store_deeplake">DeepLake</label>
                     </div>
                 </div>
                 <div class="form-group">
@@ -126,6 +128,15 @@
                         <label for="provide_sources_true">True</label>
                         <input type="radio" id="provide_sources_false" name="provide_sources" value="false" checked>
                         <label for="provide_sources_false">False</label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="chain_type"><i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="Whether to provide sources for the answers. <br><br>Note: WORK IN PROGRESS! Not functional."></i> Provide Sources (dysfunctional): </label>
+                    <div>
+                        <input type="radio" id="llm_chain" name="chain_type" value="llm_chain">
+                        <label for="llm_chain">LLM Chain</label>
+                        <input type="radio" id="conv_retr_chain" name="chain_type" value="conv_retr_chain" checked>
+                        <label for="conv_retr_chain">Conversational Retrieval C.</label>
                     </div>
                 </div>
                 <div class="horizontal-line"></div>

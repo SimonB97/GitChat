@@ -12,13 +12,14 @@ def get_ip_address():
 
 
 # Initialize the chatbot
-chain, retriever, memory, provide_sources = None, None, None, None
+chain, retriever, memory, provide_sources, chain_type = None, None, None, None, None
 
 app = Flask(__name__)
 
 @app.route("/start", methods=["GET", "POST"])
 def start():
     if request.method == "POST":
+        global chain, retriever, memory, chain_type, provide_sources
         # Get the user's input from the form
         repo_url_without_subdir = request.form["repo_url"]
         print(f"repo url in request without subdirectory: {repo_url_without_subdir}")
@@ -39,8 +40,8 @@ def start():
         vector_store = request.form["vector_store"]
         compress = request.form["compress"]
         model_name_compressor = request.form["model_name_compressor"]
-        global provide_sources
         provide_sources = request.form["provide_sources"]
+        chain_type = request.form["chain_type"]
 
         # Override sources setting because it is not yet implemented ! REMOVE THIS LINE WHEN IMPLEMENTED !!!
         provide_sources = "false"
@@ -48,8 +49,10 @@ def start():
         print(f"repo url in request (complete): {repo_url}")
 
         # initiazlize the chatbot and store the variables in the global scope
-        global chain, retriever, memory
-        chain, retriever, memory = initialize_chatbot(model_name, top_k, temperature, mem_window_k, alpha, repo_url, subdirectory, update, vector_store, compress, model_name_compressor, provide_sources)
+        
+        chain, retriever, memory = initialize_chatbot(model_name, top_k, temperature, mem_window_k, alpha, repo_url, subdirectory, update, chain_type, vector_store, compress, model_name_compressor, provide_sources)
+
+        print(f"memory: \n\t{memory}")
 
         return redirect(url_for("index"))
     return render_template("start_page.html")
@@ -62,7 +65,7 @@ def index():
         text_input = request.form["text_input"]
 
         def generate(text_input):
-            for token in chatbot_response(text_input, generate_answer, memory, chain, retriever, provide_sources):
+            for token in chatbot_response(text_input, generate_answer, memory, chain, retriever, provide_sources, chain_type):
                 print(token)
                 yield token
 

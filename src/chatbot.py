@@ -1,15 +1,17 @@
 import os
 import shutil
 from time import sleep
+import time
+import deeplake
 from flask import Flask, request, render_template, jsonify, Response, stream_with_context
 import openai
 from dotenv import load_dotenv
 
 from langchain.docstore.document import Document
 from langchain.embeddings import OpenAIEmbeddings
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.text_splitter import RecursiveCharacterTextSplitter, CharacterTextSplitter
 from langchain.prompts import PromptTemplate, SystemMessagePromptTemplate
-from langchain.vectorstores import Pinecone
+from langchain.vectorstores import Pinecone, DeepLake
 from langchain.document_loaders import TextLoader
 from langchain.memory import ConversationBufferWindowMemory
 from langchain.chat_models import ChatOpenAI
@@ -29,8 +31,8 @@ import utils.helpers as helpers
 
 from langchain.retrievers import ContextualCompressionRetriever
 from langchain.retrievers.document_compressors import LLMChainExtractor, LLMChainFilter
-
 from langchain.vectorstores import Chroma
+from deeplake.util.exceptions import ResourceNotFoundException
 
 
 def load_environment_variables():
@@ -160,29 +162,66 @@ def get_text_splitter_and_loader(sources_filename):
     return text_splitter, loader
 
 
-def create_or_load_index_pine(index_name, embeddings, text_splitter, loader):
-    # existing_indexes = pinecone.list_indexes()   # currently not working
-    existing_indexes = []
-    print(f"Existing indexes: {existing_indexes}")
-    if index_name in existing_indexes:
-        print(f"Index already exists. No need to create it. Loading index {index_name}.")
-        index = pinecone.Index(index_name)
-        wait_on_index_pine(index_name)
-        n_vectors = index.describe_index_stats()["total_vector_count"]
-        print(f"Index {index_name} loaded. It contains {n_vectors} vectors")
-        if n_vectors == 0:
-            print(f"Index {index_name} is empty. Loading docs and indexing them")
+def create_or_load_index(index_name, embeddings, text_splitter, loader, vectorstore):
+    # IF PINECONE
+    if vectorstore == "pinecone":
+        # existing_indexes = pinecone.list_indexes()   # currently not working
+        existing_indexes = []
+        print(f"Existing indexes: {existing_indexes}")
+        if index_name in existing_indexes:
+            print(f"Index already exists. No need to create it. Loading index {index_name}.")
+            index = pinecone.Index(index_name)
+            wait_on_index_pine(index_name)
+            n_vectors = index.describe_index_stats()["total_vector_count"]
+            print(f"Index {index_name} loaded. It contains {n_vectors} vectors")
+            if n_vectors == 0:
+                print(f"Index {index_name} is empty. Loading docs and indexing them")
+                docs = loader.load_and_split(text_splitter)
+                for doc in docs:
+                    doc.metadata["context"] = doc.page_content
+                print("docs created")
+                print(f"Indexing {len(docs)} docs into index {index_name}. This may take a while...")
+                Pinecone.from_documents(
+                    docs, 
+                    embedding=embeddings, 
+                    index_name=index_name, 
+                    # metadatas=[{"source": f"{i}-pl"} for i in range(len(docs))]   # for sources retrieval?
+                    )
+                print("docs indexed")
+                corpus = []
+                for doc in docs:
+                    corpus.append(doc.page_content)
+                bm25_encoder = BM25Encoder().default()
+                bm25_encoder.fit(corpus)
+                bm25_encoder.dump("../data/bm25_values.json")
+        else:
+            print(f"Index does not exist. Creating index {vectorstore} {index_name}")
+            if len(existing_indexes) > 0:
+                print(f"Deleting existing indexes: {existing_indexes}")
+                for index in existing_indexes:
+                    pinecone.delete_index(index)
+                    print(f"Index {index} deleted")
+            print(f"Creating index {index_name}")
+            pinecone.create_index(
+                name=index_name,
+                dimension=1536,  # dimensionality of dense model
+                metric="dotproduct",
+                pod_type="s1"
+            )
+            print(f"Index {index_name} created")
+            print(f"Loading index {index_name}")
+            index = pinecone.Index(index_name)
+            wait_on_index_pine(index_name)
+            print(f"Index {index_name} loaded")
             docs = loader.load_and_split(text_splitter)
             for doc in docs:
                 doc.metadata["context"] = doc.page_content
             print("docs created")
-            print(f"Indexing {len(docs)} docs into index {index_name}. This may take a while...")
-            Pinecone.from_documents(
-                docs, 
-                embedding=embeddings, 
-                index_name=index_name, 
-                # metadatas=[{"source": f"{i}-pl"} for i in range(len(docs))]   # for sources retrieval?
-                )
+            print(f"Indexing {len(docs)} docs into index {vectorstore} {index_name}. This may take a while...")
+            # index_stats = index.describe_index_stats()   # currently not working
+            # print(f"Index {index_name} stats:\n\t{index_stats}")
+
+            Pinecone.from_documents(docs, embedding=embeddings, index_name=index_name)
             print("docs indexed")
             corpus = []
             for doc in docs:
@@ -190,69 +229,66 @@ def create_or_load_index_pine(index_name, embeddings, text_splitter, loader):
             bm25_encoder = BM25Encoder().default()
             bm25_encoder.fit(corpus)
             bm25_encoder.dump("../data/bm25_values.json")
-    else:
-        print(f"Index does not exist. Creating index {index_name}")
-        if len(existing_indexes) > 0:
-            print(f"Deleting existing indexes: {existing_indexes}")
-            for index in existing_indexes:
-                pinecone.delete_index(index)
-                print(f"Index {index} deleted")
-        print(f"Creating index {index_name}")
-        pinecone.create_index(
-            name=index_name,
-            dimension=1536,  # dimensionality of dense model
-            metric="dotproduct",
-            pod_type="s1"
-        )
-        print(f"Index {index_name} created")
-        print(f"Loading index {index_name}")
-        index = pinecone.Index(index_name)
-        wait_on_index_pine(index_name)
-        print(f"Index {index_name} loaded")
-        docs = loader.load_and_split(text_splitter)
-        for doc in docs:
-            doc.metadata["context"] = doc.page_content
-        print("docs created")
-        print(f"Indexing {len(docs)} docs into index {index_name}. This may take a while...")
-        # index_stats = index.describe_index_stats()   # currently not working
-        # print(f"Index {index_name} stats:\n\t{index_stats}")
+    
+    # IF CHROMA
+    elif vectorstore == "chromadb":
+        persist_directory = f'./../data/chroma/{index_name}'
+        existing_indexes = os.listdir(persist_directory + "./../")
+        print(f"Existing indexes: {existing_indexes}")
 
-        Pinecone.from_documents(docs, embedding=embeddings, index_name=index_name)
-        print("docs indexed")
-        corpus = []
-        for doc in docs:
-            corpus.append(doc.page_content)
-        bm25_encoder = BM25Encoder().default()
-        bm25_encoder.fit(corpus)
-        bm25_encoder.dump("../data/bm25_values.json")
+        if index_name in existing_indexes:
+            print(f"Index already exists. No need to create it. Loading index {vectorstore} {index_name}.")
+            index = Chroma(
+                persist_directory=persist_directory, 
+                embedding_function=embeddings
+                )
+        else:
+            print(f"Index does not exist. Creating index {vectorstore} {index_name}")
+            documents = loader.load()
+            docs = text_splitter.split_documents(documents)
+            index = Chroma.from_documents(
+                documents=docs, 
+                embedding=embeddings, 
+                persist_directory=persist_directory, 
+                metadatas=[{"source": f"{i}-pl"} for i in range(len(docs))]   # for sources retrieval?
+                )
+            index.persist()
+            print(f"Index {index_name} created and persisted")
 
-    return index
+    # IF DEEPLAKE
+    elif vectorstore == "deeplake":
+        username = os.getenv("ACTIVELOOP_USER_NAME") # replace with your username from app.activeloop.ai
 
-def create_or_load_index_chroma(index_name, embeddings, text_splitter, loader):
-    persist_directory = f'./../data/chroma/{index_name}'
-    existing_indexes = os.listdir(persist_directory + "./../")
-    print(f"Existing indexes: {existing_indexes}")
+        max_retries = 120  # 10 minutes with 5 seconds interval
+        retry_count = 0
 
-    if index_name in existing_indexes:
-        print(f"Index already exists. No need to create it. Loading index {index_name}.")
-        index = Chroma(
-            persist_directory=persist_directory, 
-            embedding_function=embeddings
-            )
-    else:
-        print(f"Index does not exist. Creating index {index_name}")
-        documents = loader.load()
-        docs = text_splitter.split_documents(documents)
-        index = Chroma.from_documents(
-            documents=docs, 
-            embedding=embeddings, 
-            persist_directory=persist_directory, 
-            metadatas=[{"source": f"{i}-pl"} for i in range(len(docs))]   # for sources retrieval?
-            )
-        index.persist()
-        print(f"Index {index_name} created and persisted")
+        while retry_count < max_retries:
+            try:
+                if deeplake.exists(f"hub://{username}/{index_name}"):
+                    print(f"Index already exists. No need to create it. Loading index {vectorstore} {index_name}.")
+                    index = DeepLake(dataset_path=f"hub://{username}/{index_name}", embedding_function=embeddings, read_only=True, token=os.getenv("ACTIVELOOP_TOKEN"))
+                    break
+                else:
+                    print(f"Index does not exist. Creating index {vectorstore} {index_name}")
+                    documents = loader.load()
+                    docs = text_splitter.split_documents(documents)
+                    index = DeepLake(dataset_path=f"hub://{username}/{index_name}", embedding_function=embeddings, public=False, token=os.getenv("ACTIVELOOP_TOKEN"))
+                    index.add_documents(docs)
+                    break
+            except ResourceNotFoundException as e:
+                if retry_count == max_retries - 1:
+                    raise Exception("Max retries reached. Error: " + str(e))
+                else:
+                    print(f"Waiting for deletion of old index. Retrying in 5 seconds...")
+                    time.sleep(5)
+                    retry_count += 1
+            except Exception as e:
+                raise e  # Re-raise the exception if it's not a ResourceNotFoundException
+
 
     return index
+
+
 
 
 def get_bm25_encoder():
@@ -262,7 +298,7 @@ def get_bm25_encoder():
 
 def get_retriever(embeddings, index, bm25_encoder, top_k, alpha, vector_store, compress, model_name):
     if vector_store == "pinecone":
-        print("Using Pinecone retriever")
+        print("Using Pinecone hybrid retriever")
         base_retriever = PineconeHybridSearchRetriever(
             embeddings=embeddings,
             index=index,
@@ -275,6 +311,14 @@ def get_retriever(embeddings, index, bm25_encoder, top_k, alpha, vector_store, c
         # TODO: implement ChromaDB retriever
         search_type = "mmr"   # "mmr" or "similarity"
         base_retriever = index.as_retriever(search_type=search_type, top_k=top_k)
+    elif vector_store == "deeplake":
+        base_retriever = index.as_retriever()
+        base_retriever.search_kwargs['distance_metric'] = 'cos'
+        base_retriever.search_kwargs['fetch_k'] = 100
+        base_retriever.search_kwargs['maximal_marginal_relevance'] = True
+        base_retriever.search_kwargs['k'] = top_k
+
+        # TODO: optionally add deeplake filter
     else:
         raise ValueError("Invalid vector store")
     
@@ -362,28 +406,47 @@ def get_memory(mem_window_k):
     return memory
 
 
-def get_chain(chat, chat_prompt_template, memory, provide_sources):
+def get_chain(chat, chat_prompt_template, memory, provide_sources, chain_type, retriever):
     if provide_sources == "true":
         print("Using chain with sources (currently under construction)")
         chain = load_qa_with_sources_chain(llm=chat, prompt=chat_prompt_template, memory=memory, verbose=True)
-    else:
-        print("Using chain without sources")
+    elif provide_sources == "false" and chain_type == "llm_chain":
+        print("Using chain without sources (LLMChain)")
         chain = LLMChain(llm=chat, prompt=chat_prompt_template, memory=memory)
+    elif provide_sources == "false" and chain_type == "conv_retr_chain":
+        print("Using Conversational Retrieval Chain")
+        chain = ConversationalRetrievalChain.from_llm(
+            llm=chat, 
+            retriever=retriever, 
+            # qa_prompt=chat_prompt_template, 
+            # memory=memory
+            )
+
     return chain
 
 
 # generate answer - returns generator for answer
-def generate_answer(user_input, chain, retriever, memory, provide_sources):
+def generate_answer(user_input, chain, retriever, memory, provide_sources, chain_type):
     chat_history = memory.load_memory_variables({})
-    docs = retriever.get_relevant_documents(user_input)
-    context = "\n".join([doc.page_content for doc in docs])
-    if provide_sources == "false":
+    print("DEBUG: chat_history\n\t", chat_history)
+    if chain_type != "conv_retr_chain":
+        docs = retriever.get_relevant_documents(user_input)
+        context = "\n".join([doc.page_content for doc in docs])
+
+    if provide_sources == "false" and chain_type == "llm_chain":
         # Generate answer with NO sources
         inputs = [{"summaries": context, 
                    "requirements": user_input, 
                    "chat_history": chat_history,
                    }]
         answer = chain.apply(inputs)
+    elif provide_sources == "false" and chain_type == "conv_retr_chain":
+        print("DEBUG: Retrieval Chain")
+        # Generate answer Conversational Retrieval Chain
+        answer = chain({
+            "question": user_input, 
+            "chat_history": chat_history['history']
+            })
     else:
         # Generate answer with sources
         answer = chain({"input_documents": docs, 
@@ -392,6 +455,8 @@ def generate_answer(user_input, chain, retriever, memory, provide_sources):
                         "requirements": user_input}, 
                         return_only_outputs=True
                         )
+        
+
     # Save messages to chat history
     memory.save_context({"input": user_input}, {"output": answer[0]["text"]})
 
@@ -404,9 +469,9 @@ def generate_answer(user_input, chain, retriever, memory, provide_sources):
 
 
 # chatbot response - returns generator for answer
-def chatbot_response(user_input, generate_answer, memory, chain, retriever, provide_sources):
+def chatbot_response(user_input, generate_answer, memory, chain, retriever, provide_sources, chain_type):
 
-    answer_generator, context = generate_answer(user_input, chain, retriever, memory, provide_sources)
+    answer_generator, context = generate_answer(user_input, chain, retriever, memory, provide_sources, chain_type)
     
     with open(f"chat_msgs/questions_and_contexts.md", "w", encoding="utf-8", errors='replace') as qc_file:
         qc_file.write(f"History:\n\n{memory.load_memory_variables({})}\n\nQuestion: {user_input}\n\nContext:\n{context}\n")
@@ -422,53 +487,32 @@ def chatbot_response(user_input, generate_answer, memory, chain, retriever, prov
 
 
 
-def initialize_chatbot(model_name, top_k, temperature, mem_window_k, alpha, repo_url, subdirectory, update, vector_store="pinecone", compress=False, model_name_compressor="text-davinci-003", provide_sources="false"):
+def initialize_chatbot(model_name, top_k, temperature, mem_window_k, alpha, repo_url, subdirectory, update, chain_type, vector_store="pinecone", compress=False, model_name_compressor="text-davinci-003", provide_sources="false"):
     load_environment_variables()
 
     print(f"Parameters: \n\tmodel_name: {model_name}\n\ttop_k: {top_k}\n\ttemperature: {temperature}\n\tmem_window_k: {mem_window_k}\n\talpha: {alpha}\n\trepo_url: {repo_url}\n\tsubdirectory: {subdirectory}\n\tupdate: {update}")
+
     repo_owner, repo_name, subdirectory = get_github_info(repo_url)
     sources_filename = get_sources_filename(repo_owner, repo_name, subdirectory)
 
     index_name = get_index_name(repo_owner, repo_name, subdirectory)
-    print(f"index name to be used: {index_name}")
 
     check_update(update, sources_filename, index_name, vector_store)
-    print("update checked")
     load_sources(sources_filename, repo_url)
 
-    
-    print("getting embeddings")
     embeddings = get_embeddings()
-    print("embeddings loaded")
-
-    print("getting text splitter and loader")
     text_splitter, loader = get_text_splitter_and_loader(sources_filename)
-    print("text splitter and loader loaded")
 
     if vector_store == "pinecone":
         print("initializing pinecone")
         initialize_pinecone()
-        print("pinecone initialized")
-        
-        print("creating or loading index")
-        index = create_or_load_index_pine(index_name, embeddings, text_splitter, loader)
-        print("index created or loaded")
-        print("getting bm25 encoder")
         bm25_encoder = get_bm25_encoder()
-        print("bm25 encoder loaded")
-    elif vector_store == "chromadb":
-        # ChromaDB
-        print("initializing chromadb")
-        index = create_or_load_index_chroma(index_name, embeddings, text_splitter, loader)
     else:
-        raise ValueError(f"vector_store {vector_store} not supported.")
-    
-    if vector_store != "pinecone":
         bm25_encoder = None
-    print("getting retriever")
+        
+    index = create_or_load_index(index_name, embeddings, text_splitter, loader, vector_store)
+    
     retriever = get_retriever(embeddings, index, bm25_encoder, top_k, alpha, vector_store, compress, model_name_compressor)
-    print("retriever loaded")
-    print("getting chain")
     system_message_prompt = get_system_message_prompt_template()
     human_message_prompt = HumanMessagePromptTemplate(prompt=get_prompt_template())
     chat_prompt_template = get_chat_prompt_template(system_message_prompt, human_message_prompt)
@@ -476,8 +520,7 @@ def initialize_chatbot(model_name, top_k, temperature, mem_window_k, alpha, repo
     callback_manager = get_callback_manager()
     chat = get_chat_model(temperature, model_name, callback_manager)
     memory = get_memory(mem_window_k)
-    chain = get_chain(chat, chat_prompt_template, memory, provide_sources)
-    print("chain loaded")
+    chain = get_chain(chat, chat_prompt_template, memory, provide_sources, chain_type, retriever)
 
     return chain, retriever, memory
 
