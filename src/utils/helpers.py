@@ -1,7 +1,11 @@
 # import libraries
+import json
 import subprocess
 import re
 import os
+import sys
+import traceback
+import chardet
 import nbformat
 from nbconvert import MarkdownExporter
 import charset_normalizer
@@ -38,7 +42,7 @@ def get_github_docs(repo_url: str):
             archive_cmd = f"git archive --remote=https://github.com/{repo_owner}/{repo_name}.git HEAD:{subdirectory} | tar -x -C {repo_path}"
             subprocess.check_call(archive_cmd, shell=True)
         else:
-            clone_cmd = f"git clone --depth 1 https://github.com/{repo_owner}/{repo_name}/.git ."
+            clone_cmd = f"git clone --depth 1 https://github.com/{repo_owner}/{repo_name}.git ."
             subprocess.check_call(clone_cmd, cwd=d, shell=True)
         
         git_sha = (
@@ -48,7 +52,7 @@ def get_github_docs(repo_url: str):
         )
         repo_path = pathlib.Path(d)
         
-        matched_files = list(repo_path.glob("**/*"))
+        matched_files = list(repo_path.glob("**/*.*"))
         venv_files = 0
 
         for file in matched_files:
@@ -60,21 +64,25 @@ def get_github_docs(repo_url: str):
                 github_url = f"https://github.com/{repo_owner}/{repo_name}/blob/{git_sha}/{relative_path}"
                 file_ext = file.suffix.lower()
 
-                # Detect encoding using charset-normalizer
-                encoding = CnM.from_path(file).best().first().encoding
+                # Detect encoding
+                with open(file, "rb") as f:
+                    content = f.read()
+                result = charset_normalizer.detect(content)
+                encoding = result["encoding"]
+                print(f'Encoding: {encoding}')
 
-                with open(file, "r", encoding=encoding) as f:
-                    if file_ext == ".rst":
-                        page_content = helpers.convert_rst_to_md(str(file))
-                    elif file_ext == ".ipynb":
-                        page_content = helpers.convert_ipynb_to_md(str(file))
-                    elif file_ext == ".py":
-                        page_content = helpers.convert_py_to_md(str(file))
-                    else:
-                        page_content = helpers.convert_any_to_md(str(file))
+                if file_ext == ".rst":
+                    page_content = helpers.convert_rst_to_md(str(file), encoding)
+                elif file_ext == ".ipynb":
+                    page_content = helpers.convert_ipynb_to_md(str(file), encoding)
+                elif file_ext == ".py":
+                    page_content = helpers.convert_py_to_md(str(file), encoding)
+                else:
+                    page_content = helpers.convert_any_to_md(str(file), encoding)
 
-                    if page_content is not None:
-                        yield Document(page_content=page_content, metadata={"source": github_url})
+                if page_content is not None:
+                    yield Document(page_content=page_content, metadata={"source": github_url})
+
             except Exception as e:
                 print(f"Error processing file {file}: {e}")
                 continue
@@ -95,13 +103,7 @@ def extract_github_info(repo_url: str):
 #----- Convert and output -----#
 
 # any to md
-def convert_any_to_md(filepath):
-    with open(filepath, "rb") as file:
-        content = file.read()
-
-    result = charset_normalizer.detect(content)
-    encoding = result["encoding"]
-    print(f'Encoding: {encoding}')
+def convert_any_to_md(filepath, encoding):
 
     with open(filepath, "r", encoding=encoding) as file:
         encoded_text = file.read()
@@ -111,18 +113,53 @@ def convert_any_to_md(filepath):
     return md_content  
 
 # ipynb to md
-def convert_ipynb_to_md(filepath):
-    print(f"trying to convert {filepath}")
-    with open(filepath, 'r', encoding='utf-8') as f:
-        nb = nbformat.read(f, as_version=4)
+def convert_ipynb_to_md(filepath, encoding):
+    try:
+        print(f"Trying to convert {filepath}")
+        update_nbformat_minor(filepath)
+
+        try:
+            # Try opening the file with the encoding detected by charset-normalizer
+            with open(filepath, 'r', encoding=encoding, errors='replace') as f:
+                nb = nbformat.read(f, as_version=4)
+        except UnicodeDecodeError:
+            # Fallback to chardet if charset-normalizer fails
+            with open(filepath, 'rb') as f:
+                result = chardet.detect(f.read())
+            detected_encoding = result['encoding']
+
+            with open(filepath, 'r', encoding=detected_encoding, errors='replace') as f:
+                nb = nbformat.read(f, as_version=4)
+
+        # Check and fix metadata
+        if "metadata" not in nb:
+            nb.metadata = {}
+        if "language" not in nb.metadata:
+            nb.metadata["language"] = "python"
+
         md_exporter = MarkdownExporter()
         (body, resources) = md_exporter.from_notebook_node(nb)
 
-    print(f'Successfully converted {filepath} to markdown')
-    return body
+        print(f'Successfully converted {filepath} to markdown')
+        return body
+
+    except Exception as e:
+        print(f"Error occurred while converting {filepath} to markdown")
+        print(f"Error: {e}")
+        return None
+
+    except Exception as e:
+        print(f"Error occurred while converting {filepath} to markdown")
+        print(f"Error: {str(e)}")
+        print("Traceback:")
+        traceback.print_tb(e.__traceback__)
+        sys.exit(1)
+
+
+
 
 # rst to md
-def convert_rst_to_md(filepath):
+def convert_rst_to_md(filepath, encoding):
     output_file = 'temp_output.md'
     command = [pandoc_path, filepath, '-f', 'rst', '-t', 'markdown', '-o', output_file]
     result = subprocess.run(command, capture_output=True, text=True)
@@ -131,7 +168,7 @@ def convert_rst_to_md(filepath):
         print(f'Successfully converted {filepath} to markdown')
         
         # Read the converted file and remove custom blocks
-        with open(output_file, "r", encoding='utf-8') as f:
+        with open(output_file, "r", encoding=encoding) as f:
             md_content = f.read()
 
         md_content = re.sub(r':::.*?:::', '', md_content, flags=re.DOTALL)
@@ -145,14 +182,7 @@ def convert_rst_to_md(filepath):
         return None
     
 # py to md
-def convert_py_to_md(filepath):
-    with open(filepath, "rb") as file:
-        content = file.read()
-
-    result = charset_normalizer.detect(content)
-    encoding = result["encoding"]
-    print(f'Encoding: {encoding}')
-
+def convert_py_to_md(filepath, encoding):
     with open(filepath, "r", encoding=encoding) as file:
         code = file.read()
     
@@ -176,3 +206,16 @@ def compile_messages(messages):
 
     return compiled_string
 
+
+def update_nbformat_minor(filepath):
+    with open(filepath, 'r') as file:
+        notebook = json.load(file)
+
+    # Update the nbformat_minor value
+    if notebook.get('nbformat_minor') is not None:
+        notebook['nbformat_minor'] = 5
+    else:
+        print("nbformat_minor not found in the file")
+
+    with open(filepath, 'w') as file:
+        json.dump(notebook, file, indent=2)

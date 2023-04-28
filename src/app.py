@@ -51,6 +51,8 @@ def start():
         # initiazlize the chatbot and store the variables in the global scope
         
         chain, retriever, memory = initialize_chatbot(model_name, top_k, temperature, mem_window_k, alpha, repo_url, subdirectory, update, chain_type, vector_store, compress, model_name_compressor, provide_sources)
+        # if chain_type == "conv_retr_chain":
+        #     memory = []
 
         print(f"memory: \n\t{memory}")
 

@@ -309,7 +309,7 @@ def get_retriever(embeddings, index, bm25_encoder, top_k, alpha, vector_store, c
     elif vector_store == "chromadb":
         print("Using ChromaDB retriever")
         # TODO: implement ChromaDB retriever
-        search_type = "mmr"   # "mmr" or "similarity"
+        search_type = "similarity"   # "mmr" or "similarity"
         base_retriever = index.as_retriever(search_type=search_type, top_k=top_k)
     elif vector_store == "deeplake":
         base_retriever = index.as_retriever()
@@ -346,8 +346,8 @@ def get_system_message_prompt_template():
     the information will be organized like this:
     
     ---- START of CHAT HISTORY ----
-    "the chat history"
-    ---- END of CHAT HISTORY ----
+    "the chat chat_history"
+    ---- END of CHAT chat_history ----
 
     ==== START of CONTEXT ====
     "the context"
@@ -366,9 +366,9 @@ def get_system_message_prompt_template():
 
 def get_prompt_template():
     prompt_template = """
-    ---- START of CHAT HISTORY ----
-    {chat_history}
-    ---- END of CHAT HISTORY ----
+    ---- START of CHAT chat_history ----
+    {chat_chat_history}
+    ---- END of CHAT chat_history ----
 
     ==== START of CONTEXT ====
     {summaries}
@@ -381,7 +381,7 @@ def get_prompt_template():
     Score:"""
 
     PROMPT = PromptTemplate(
-        template=prompt_template, input_variables=["summaries", "requirements", "chat_history"]
+        template=prompt_template, input_variables=["summaries", "requirements", "chat_chat_history"]
     )
     return PROMPT
 
@@ -402,7 +402,7 @@ def get_chat_model(temperature, model_name, callback_manager):
 
 
 def get_memory(mem_window_k):
-    memory = ConversationBufferWindowMemory(k=mem_window_k, memory_key="history", return_messages=True)
+    memory = ConversationBufferWindowMemory(k=mem_window_k, memory_key="chat_history", return_messages=True, output_key='answer')
     return memory
 
 
@@ -419,7 +419,8 @@ def get_chain(chat, chat_prompt_template, memory, provide_sources, chain_type, r
             llm=chat, 
             retriever=retriever, 
             # qa_prompt=chat_prompt_template, 
-            # memory=memory
+            memory=memory,
+            return_source_documents=True,
             )
 
     return chain
@@ -427,9 +428,9 @@ def get_chain(chat, chat_prompt_template, memory, provide_sources, chain_type, r
 
 # generate answer - returns generator for answer
 def generate_answer(user_input, chain, retriever, memory, provide_sources, chain_type):
-    chat_history = memory.load_memory_variables({})
-    print("DEBUG: chat_history\n\t", chat_history)
     if chain_type != "conv_retr_chain":
+        chat_history = memory.load_memory_variables({})
+        print("DEBUG: chat_history\n\t", chat_history)
         docs = retriever.get_relevant_documents(user_input)
         context = "\n".join([doc.page_content for doc in docs])
 
@@ -442,11 +443,15 @@ def generate_answer(user_input, chain, retriever, memory, provide_sources, chain
         answer = chain.apply(inputs)
     elif provide_sources == "false" and chain_type == "conv_retr_chain":
         print("DEBUG: Retrieval Chain")
+        # chat_history = memory
+        chat_history = memory.load_memory_variables({})
         # Generate answer Conversational Retrieval Chain
         answer = chain({
             "question": user_input, 
-            "chat_history": chat_history['history']
+            "chat_history": chat_history
             })
+        # chat_history.append((user_input, answer['answer']))
+        context = answer['source_documents']
     else:
         # Generate answer with sources
         answer = chain({"input_documents": docs, 
@@ -455,16 +460,21 @@ def generate_answer(user_input, chain, retriever, memory, provide_sources, chain
                         "requirements": user_input}, 
                         return_only_outputs=True
                         )
-        
 
-    # Save messages to chat history
-    memory.save_context({"input": user_input}, {"output": answer[0]["text"]})
+    # Save messages to chat chat_history
+    if chain_type != "conv_retr_chain":
+        # Create a generator for tokens
+        def token_generator():
+            for token in answer[0]["text"]:
+                yield token
+        memory.save_context({"input": user_input}, {"output": answer[0]["text"]})
 
-    # Create a generator for tokens
-    def token_generator():
-        for token in answer[0]["text"]:
-            yield token
-
+    else:
+        # Create a generator for tokens
+        def token_generator():
+            for token in answer['answer']:
+                yield token
+    
     return token_generator(), context
 
 
@@ -472,17 +482,25 @@ def generate_answer(user_input, chain, retriever, memory, provide_sources, chain
 def chatbot_response(user_input, generate_answer, memory, chain, retriever, provide_sources, chain_type):
 
     answer_generator, context = generate_answer(user_input, chain, retriever, memory, provide_sources, chain_type)
-    
+
     with open(f"chat_msgs/questions_and_contexts.md", "w", encoding="utf-8", errors='replace') as qc_file:
         qc_file.write(f"History:\n\n{memory.load_memory_variables({})}\n\nQuestion: {user_input}\n\nContext:\n{context}\n")
-    
+
     with open(f"chat_msgs/answers.md", "w", encoding="utf-8", errors='replace') as ans_file:
         for token in answer_generator:
             ans_file.write(token)
-            yield token
+            yield token.encode('utf-8')  # Convert string to bytes
 
-    with open(f"chat_msgs/history.md", "w", encoding="utf-8", errors='replace') as hist_file:
+    with open(f"chat_msgs/chat_history.md", "w", encoding="utf-8", errors='replace') as hist_file:
         hist_file.write(str(memory.load_memory_variables({})))
+
+    if chain_type == "conv_retr_chain":
+        yield "\n\n".encode('utf-8')  # Convert string to bytes
+        # list of sources (context) to generator
+        for i, doc in enumerate(context):
+            # yield "".join(doc.page_content).encode('utf-8')  # Convert string to bytes
+            for token in doc.page_content:
+                yield ''.join(token).encode('utf-8')  # Convert string to bytes
 
 
 
