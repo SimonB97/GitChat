@@ -73,10 +73,10 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="top_k"><i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="The number of chunks to return by the document retriever. <br><br> Note:  Depending on the chunk size and context window size of the model, too high values might fill up the context window, which leads to the LLM 'forgetting' some earlier lines of text. I suggest to try something between 5 and 15. (Chunk size is currently hardcoded: 1000 characters)"></i> Top k chunks: </label>
+                    <label for="top_k"><i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="The number of chunks to return by the document retriever. <br><br> Note:  Depending on the chunk size and context window size of the model, too high values might fill up the context window, which leads to the LLM 'forgetting' some earlier lines of text. I suggest to try something between 5 and 50. (Chunk size is currently hardcoded: 1000 characters)"></i> Top k chunks: </label>
                     <div class="slider-container">
-                        <input type="range" class="form-control" id="top_k" name="top_k" min="1" max="50" step="1" value="8" oninput="updateSliderValue(this, 'top_k_output')" required>
-                        <span id="top_k_output">6</span>
+                        <input type="range" class="form-control" id="top_k" name="top_k" min="1" max="150" step="1" value="20" oninput="updateSliderValue(this, 'top_k_output')" required>
+                        <span id="top_k_output">20</span>
                     </div>
                 </div>
                 <div id="alpha_form" class="form-group">

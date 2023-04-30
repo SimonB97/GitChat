@@ -19,7 +19,9 @@ import tempfile
 from urllib.parse import urlparse
 import utils.helpers as helpers
 
-pandoc_path = "C:/Users/sbene/appdata/local/pandoc/pandoc.exe"
+# get user path
+user_path = os.path.expanduser("~")
+pandoc_path = os.path.join(user_path, "AppData", "Local", "Pandoc", "pandoc.exe")
 
 
 #----- Github -----#
@@ -33,27 +35,60 @@ def get_github_docs(repo_url: str):
         
     Yields:
         '''
+
+    print(f"Processing repository: {repo_url}")
     repo_owner, repo_name, subdirectory = extract_github_info(repo_url)
-    
+    print(f"Subdirectory: {subdirectory}")
+
     with tempfile.TemporaryDirectory() as d:
         repo_path = pathlib.Path(d)
 
-        if subdirectory:
-            archive_cmd = f"git archive --remote=https://github.com/{repo_owner}/{repo_name}.git HEAD:{subdirectory} | tar -x -C {repo_path}"
-            subprocess.check_call(archive_cmd, shell=True)
+        # Initialize an empty Git repository
+        init_cmd = "git init"
+        subprocess.check_call(init_cmd, cwd=d, shell=True)
+
+        # Add the remote repository
+        remote_cmd = f"git remote add origin https://github.com/{repo_owner}/{repo_name}.git"
+        subprocess.check_call(remote_cmd, cwd=d, shell=True)
+
+        # Enable sparse-checkout
+        sparse_cmd = "git config core.sparseCheckout true"
+        subprocess.check_call(sparse_cmd, cwd=d, shell=True)
+
+        # Specify the subdirectory to include
+        if subdirectory is not None:
+            if subdirectory.startswith("tree/"):
+                _, branch, *subdir_parts = subdirectory.split("/")
+                subdirectory = "/".join(subdir_parts)
+            else:
+                branch = "HEAD"
+
+            with open(repo_path / ".git/info/sparse-checkout", "w") as f:
+                f.write(subdirectory)
+
+                # Fetch the specified branch
+                fetch_cmd = f"git fetch --depth 1 origin {branch}"
+                subprocess.check_call(fetch_cmd, cwd=d, shell=True)
         else:
-            clone_cmd = f"git clone --depth 1 https://github.com/{repo_owner}/{repo_name}.git ."
-            subprocess.check_call(clone_cmd, cwd=d, shell=True)
-        
+            # Fetch the default branch
+            fetch_cmd = "git fetch --depth 1 origin"
+            subprocess.check_call(fetch_cmd, cwd=d, shell=True)
+
+        # Checkout the fetched branch
+        checkout_cmd = "git checkout FETCH_HEAD"
+        subprocess.check_call(checkout_cmd, cwd=d, shell=True)
+
         git_sha = (
             subprocess.check_output("git rev-parse HEAD", shell=True, cwd=d)
             .decode("utf-8")
             .strip()
         )
         repo_path = pathlib.Path(d)
-        
+
         matched_files = list(repo_path.glob("**/*.*"))
+        print(f"Matched files: {matched_files}")
         venv_files = 0
+        other_files = 0
 
         for file in matched_files:
             if ".venv" in str(file.parts):
@@ -85,18 +120,32 @@ def get_github_docs(repo_url: str):
 
             except Exception as e:
                 print(f"Error processing file {file}: {e}")
+                other_files += 1
                 continue
-        
+
         print(f"Total venv files skipped: {venv_files}")
+        print(f"Total other files skipped: {other_files} (CHECK THESE FILES!)")
+
+# def extract_github_info(repo_url: str):
+#     parsed_url = urlparse(repo_url)
+#     print(f'Parsed URL: {parsed_url}')
+#     path_parts = parsed_url.path.strip("/").split("/")
+#     print(f'Path parts: {path_parts}')
+#     repo_owner = path_parts[0]
+#     repo_name = path_parts[1]
+#     subdirectory = "/".join(path_parts[4:]) if len(path_parts) > 4 else None
+#     return repo_owner, repo_name, subdirectory
 
 def extract_github_info(repo_url: str):
+    print(f'DEBUG Repo URL: {repo_url}')
     parsed_url = urlparse(repo_url)
-    print(f'Parsed URL: {parsed_url}')
+    print(f'DEBUG Parsed URL: {parsed_url}')
     path_parts = parsed_url.path.strip("/").split("/")
-    print(f'Path parts: {path_parts}')
     repo_owner = path_parts[0]
     repo_name = path_parts[1]
-    subdirectory = "/".join(path_parts[4:]) if len(path_parts) > 4 else None
+    subdirectory = None
+    if len(path_parts) > 3 and path_parts[2] == "tree":
+        subdirectory = "tree/" + "/".join(path_parts[3:])
     return repo_owner, repo_name, subdirectory
 
 

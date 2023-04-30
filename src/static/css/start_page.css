@@ -1,13 +1,13 @@
 body {
     font-family: 'DM Sans', sans-serif;
-    background: #292727db;
+    background: #1717176d;
     color: #ffffff;
-    background-image: url('./../images/background-3-us.jpg');
+    background-image: url('./../images/background-3-us-cut.jpg');
     background-repeat: no-repeat;
     background-position: center center;
     background-attachment: fixed;
     background-size: cover;
-    background-blend-mode: color;
+    background-blend-mode: overlay;
 }
 
 h2 {
