@@ -12,18 +12,19 @@ def get_ip_address():
 
 
 # Initialize the chatbot
-chain, retriever, memory, provide_sources = None, None, None, None
+chain, retriever, memory, provide_sources, chain_type = None, None, None, None, None
 
 app = Flask(__name__)
 
 @app.route("/start", methods=["GET", "POST"])
 def start():
     if request.method == "POST":
+        global chain, retriever, memory, chain_type, provide_sources
         # Get the user's input from the form
         repo_url_without_subdir = request.form["repo_url"]
         print(f"repo url in request without subdirectory: {repo_url_without_subdir}")
         subdirectory = request.form["subdirectory"]
-        if subdirectory != "None":
+        if subdirectory != "None" and subdirectory != "":
             print(f"subdirectory: {subdirectory}")
             repo_url = f"{repo_url_without_subdir}/{subdirectory}"
             print(f"repo url in request with subdirectory: {repo_url}")
@@ -39,54 +40,40 @@ def start():
         vector_store = request.form["vector_store"]
         compress = request.form["compress"]
         model_name_compressor = request.form["model_name_compressor"]
-        global provide_sources
         provide_sources = request.form["provide_sources"]
+        chain_type = request.form["chain_type"]
 
-        print(f"repo url in request complete: {repo_url}")
+        # Override sources setting because it is not yet implemented ! REMOVE THIS LINE WHEN IMPLEMENTED !!!
+        provide_sources = "false"
 
-        # chain, retriever, memory = initialize_chatbot(model_name, top_k, temperature, mem_window_k, alpha, repo_url, subdirectory, update)
+        print(f"repo url in request (complete): {repo_url}")
 
         # initiazlize the chatbot and store the variables in the global scope
-        global chain, retriever, memory
-        chain, retriever, memory = initialize_chatbot(model_name, top_k, temperature, mem_window_k, alpha, repo_url, subdirectory, update, vector_store, compress, model_name_compressor, provide_sources)
+        
+        chain, retriever, memory = initialize_chatbot(model_name, top_k, temperature, mem_window_k, alpha, repo_url, subdirectory, update, chain_type, vector_store, compress, model_name_compressor, provide_sources)
+        # if chain_type == "conv_retr_chain":
+        #     memory = []
+
+        print(f"memory: \n\t{memory}")
 
         return redirect(url_for("index"))
     return render_template("start_page.html")
 
 
-# @app.route("/", methods=["GET", "POST"])
-# def index():
-#     if request.method == "POST":
-#         text_input = request.form["text_input"]
-#         response = chatbot_response(
-#             text_input, 
-#             generate_answer,
-#             memory,
-#             chain,
-#             retriever,
-#             provide_sources
-#             )
-#         return jsonify(response=response)
-
-#     return render_template("index.html")
-
-
-# first attempt at streaming
+# Route for handling the chatbot
 @app.route("/", methods=["GET", "POST"])
 def index():
     if request.method == "POST":
         text_input = request.form["text_input"]
 
         def generate(text_input):
-            for token in chatbot_response(text_input, generate_answer, memory, chain, retriever, provide_sources):
+            for token in chatbot_response(text_input, generate_answer, memory, chain, retriever, provide_sources, chain_type):
                 print(token)
                 yield token
 
         return Response(stream_with_context(generate(text_input)), content_type='text/plain')
 
     return render_template("index.html")
-
-
 
 
 @app.route("/clear_memory", methods=["POST"])
@@ -99,4 +86,8 @@ if __name__ == "__main__":
     ip_address = get_ip_address()
     url = f"http://{ip_address}:5000/start"
     webbrowser.open_new(url)
-    app.run(debug=True, host=ip_address)
+    app.run(
+        # debug=True,
+        # host=ip_address
+        host="0.0.0.0"  # TODO: security issue
+        )

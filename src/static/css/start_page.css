@@ -1,0 +1,213 @@
+body {
+    font-family: 'DM Sans', sans-serif;
+    /* background: #1717176d; */
+    background: #1e1e1f;
+    /* background-image: linear-gradient(-180deg, rgba(0, 0, 0, 0.5) 0%, rgba(0,0,0,0.50) 100%); */
+    background-blend-mode: lighten;
+    color: #ece8e8;
+    /* background-image: url('./../images/background-3-us-cut.jpg'); */
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-attachment: fixed;
+    background-size: cover;
+    /* background-blend-mode: overlay; */
+}
+
+h2 {
+    font-weight: bold;
+    font-size: 40px;
+    margin-bottom: 25px;
+    /* text-shadow: 6px 5px 8px #13131393; */
+    background-color: rgb(0, 0, 0);
+}
+
+.header-style {
+    background: linear-gradient(to right, #00f260, #0575e6);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.form {
+    background-color: rgba(34, 34, 34, 0.8); /* Dark grey with 80% opacity */
+    border-radius: 10px; /* Rounded corners */
+    padding: 20px; /* Add some padding inside the form */
+}
+
+#header-icon {
+    height: 0.8em;
+    width: 0.8em;
+    /* margin-right: 0.2em; */
+    margin-bottom: 0.2em;
+    fill: url(#header-icon-gradient);
+    filter: drop-shadow(0px 0px 0px #ffffff00) !important;
+}
+
+label {
+    font-weight: 400;
+    font-size: 16px;
+}
+
+.info-icon {
+    margin-right: 5px;
+}
+
+.form-control {
+    background-color: #cafdf127;
+    color: #f0f0f0;
+    border: none;
+    border-radius: 10px;
+    margin-top: 8px;
+}
+
+.form-control:focus {
+    outline: none;
+    color: #f0f0f0;
+    box-shadow: none;
+}
+
+.btn-primary {
+    background-color: #1a9476;
+    border: none;
+    border-radius: 10px;
+    color: #f0f0f0;
+    padding: 10px 15px;
+    font-size: 16px;
+    box-shadow: 3px 2px 9px rgba(40, 40, 40, 0.368);
+}
+
+.btn-primary:hover {
+    background-color: #157258;
+}
+
+.container {
+    max-width: 80%;
+}
+
+.form-group {
+    display: inline-block;
+    vertical-align: top;
+    position: relative;
+    padding: 0 40px;
+    width: 49%;
+    box-sizing: border-box;
+    margin:0px;
+    margin-bottom: 15px;
+}
+
+.form-group-textarea {
+    margin-bottom: 25px;
+    margin-top: 10px;
+}
+
+.form-group:nth-child(2n)::after {
+    display: none;
+}
+
+.form-group:nth-child(2n+1) {
+    clear: left;
+}
+
+.horizontal-line {
+    position: relative;
+    max-width: 85%;
+    height: 2px;
+    background-color: #31303019;
+    margin: 10px 0;
+    margin-top: 0px;
+    margin-left: 6%;
+    margin-right: 7%;
+}
+
+.form-options {
+    max-height: calc(100vh - 150px);
+    overflow-y: auto;
+    padding-right: 10px;
+}
+/* 
+.form-control select {
+    background-color: #292727b8;
+    color: #f0f0f0;
+} */
+
+
+.submit-button {
+    position: fixed;
+    bottom: 100px;
+    right:5%;
+
+}
+
+@media (max-width: 767px) {
+    .form-group {
+        width: 100%;
+        padding: 0 0 20px;
+    }
+}
+
+input[type="radio"]{
+    margin-top: 11px;
+    margin-left: 25px;
+    background-color: rgba(255, 255, 255, 0.345) !important;
+}
+
+.slider-container {
+    display: flex;
+    align-items: center;
+    margin-right: 10px;
+}
+
+.slider-container input[type="range"] {
+    flex-grow: 1;
+    margin-right: 20px;
+    box-shadow: none;
+    padding: 0px 0px;
+}
+
+.drop-down:focus {
+    outline: none;
+    background-color: #232524ce;
+}
+
+.drop-down option {
+    background-color: #17161691;
+}
+
+.glyphicon {
+    color: #d3d3d357;
+}
+
+.qtip-bootstrap {
+    position: absolute;
+    width: max-content;
+    width: 300px;
+    max-height: 60%;
+    overflow: auto;
+    left: 10%;
+}
+
+::-webkit-scrollbar-track {
+    background-color: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: #ccc;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: #aaa;
+}
+
+::-webkit-scrollbar-track:hover {
+    background-color: #f2f2f2;
+}
+
+::-webkit-scrollbar-corner {
+    background-color: transparent;
+}
+
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}

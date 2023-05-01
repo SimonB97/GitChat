@@ -1,206 +1,42 @@
+ <!-- start_page.html -->
 <!DOCTYPE html>
-<html>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-
+<html lang="en">
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Start Page</title>
+    <link rel="icon" type="image/png" href="./../static/images/GitChat-Logo.png" />
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- TODO: get another qtip version that stays active until clicking away -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/qtip2/3.0.3/jquery.qtip.min.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qtip2/3.0.3/jquery.qtip.min.js"></script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans&display=swap" rel="stylesheet">
-
-    <style>
-        body {
-            font-family: 'DM Sans', sans-serif;
-            background: #202123;
-            color: #f0f0f0;
-        }
-
-        h1 {
-            font-weight: bold;
-        }
-
-        label {
-            font-weight: bold;
-            font-size: 16px;
-        }
-
-        .info-icon {
-            margin-left: 5px;
-            
-        }
-
-        .form-control {
-            background-color: #40414f;
-            color: #f0f0f0;
-            border: none;
-            border-radius: 10px;
-            margin-top: 8px;
-        }
-
-        .form-control:focus {
-            outline: none;
-            color: #f0f0f0;
-            box-shadow: none;
-        }
-
-        .btn-primary {
-            background-color: #1a9476;
-            border: none;
-            border-radius: 10px;
-            color: #f0f0f0;
-            padding: 10px 15px;
-            font-size: 16px;
-        }
-
-        .btn-primary:hover {
-            background-color: #157258;
-        }
-
-        .container {
-            max-width: 80%;
-        }
-
-        .form-group {
-            display: inline-block;
-            vertical-align: top;
-            position: relative;
-            padding: 0 40px;
-            width: 49%;
-            box-sizing: border-box;
-            margin:0px;
-            margin-bottom: 15px;
-        }
-
-        .form-group-textarea {
-            margin-bottom: 25px;
-            margin-top: 10px;
-        }
-
-        .form-group:nth-child(2n)::after {
-            display: none;
-        }
-
-        .form-group:nth-child(2n+1) {
-            clear: left;
-        }
-
-        .horizontal-line {
-            position: relative;
-            max-width: 85%;
-            height: 2px;
-            background-color: #383838;
-            margin: 10px 0;
-            margin-top: 0px;
-            margin-left: 6%;
-            margin-right: 7%;
-        }
-
-        .form-options {
-            max-height: calc(100vh - 150px);
-            overflow-y: auto;
-            padding-right: 10px;
-        }
-
-        .submit-button {
-            position: fixed;
-            bottom: 100px;
-            right:5%;
-
-        }
-
-        @media (max-width: 767px) {
-            .form-group {
-                width: 100%;
-                padding: 0 0 20px;
-            }
-        }
-
-        input[type="radio"]{
-            margin-top: 11px;
-            margin-left: 25px;
-        }
-
-        .slider-container {
-            display: flex;
-            align-items: center;
-            margin-right: 10px;
-        }
-
-        .slider-container input[type="range"] {
-            flex-grow: 1;
-            margin-right: 20px;
-        }
-
-        
-
-    </style>
-    <script>
-        function updateSliderValue(slider, output) {
-            document.getElementById(output).innerHTML = slider.value;
-        }
-        function toggleModelNameCompressor() {
-            var compressTrue = document.getElementById("compress_true");
-            var modelNameCompressor = document.getElementById("model_name_compressor").parentNode.parentNode;
-            if (compressTrue.checked) {
-                modelNameCompressor.style.display = "inline-block";
-            } else {
-                modelNameCompressor.style.display = "none";
-            }
-        }
-        function toggleAlphaForm() {
-            var vectorStorePinecone = document.getElementById("vector_store_pinecone");
-            var alphaForm = document.getElementById("alpha_form");
-            if (vectorStorePinecone.checked) {
-                alphaForm.style.display = "inline-block";
-            } else {
-                alphaForm.style.display = "none";
-            }
-        }
-        $(document).ready(function() {
-            toggleModelNameCompressor();
-            toggleAlphaForm();
-    
-            document.getElementById("vector_store_pinecone").addEventListener("change", toggleAlphaForm);
-            document.getElementById("vector_store_chromadb").addEventListener("change", toggleAlphaForm);
-    
-            $('.info-icon').qtip({
-                content: {
-                    attr: 'data-tooltip'
-                },
-                style: {
-                    classes: 'qtip-bootstrap'
-                },
-                position: {
-                    my: 'left center',
-                    at: 'right center'
-                }
-            });
-        });
-    </script>
-    
+    <link href="./../static/css/start_page.css" type="text/css" rel="stylesheet">
 </head>
 
 <body>
     <div class="container">
-        <h2>GitChat Configuration</h2>
-        <form method="POST" action="{{ url_for('start') }}">
+        <h2 class="text-center header-style">
+            <img id="header-icon" src="./../static/images/GitChat-Logo.png" alt="GitChat Icon">
+            GitChat - Configuration
+        </h2>   
+        <form class=".form" method="POST" action="{{ url_for('start') }}">
             <div class="form-options"></div>
+            <div class="horizontal-line"></div>
                 <div class="form-group form-group-textarea">
-                    <label for="repo_url">Repo URL: <i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="Enter the repository URL here [https://github.com/owner_name/repo_name]. (e.g. [https://github.com/hwchase17/langchain])"></i></label>
-                    <input type="text" class="form-control" id="repo_url" name="repo_url" value="https://github.com/hwchase17/langchain" required>
+                    <label for="repo_url"><i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="Enter the repository URL here. <br><br>For example: <br> https://github.com/SimonB97/GitChat"></i> Repo URL: </label>
+                    <input type="text" class="form-control" id="repo_url" name="repo_url" placeholder="https://github.com/SimonB97/GitChat" required>
                 </div>
                 <div class="form-group form-group-textarea">
-                    <label for="subdirectory">Subdirectory: <i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="Enter the subdirectory of the repository or None (to load the whole repository) here. (e.g. [docs])"></i></label>
-                    <input type="text" class="form-control" id="subdirectory" name="subdirectory" value="None" required>
+                    <label for="subdirectory"><i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="Enter the subdirectory of the repository or leave blank to load the whole repository.<br><br> For example: <br>src/templates"></i> Subdirectory: </label>
+                    <input type="text" class="form-control" id="subdirectory" name="subdirectory" placeholder="path/to/dir">
                 </div>
                 <div class="horizontal-line"></div>
                 <div class="form-group">
-                    <label for="model_name">Model Name:</label>
+                    <label for="model_name"><i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="Select the model for Question Answering here. <br><br> GPT-4: most capable, slower <br> GPT-3.5-turbo: very capable, very fast"></i> Model Name: </label>
                     <div>
                         <input type="radio" id="gpt-3.5-turbo" name="model_name" value="gpt-3.5-turbo" checked>
                         <label for="gpt-3.5-turbo">GPT-3.5-turbo</label>
@@ -209,24 +45,26 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="temperature">Temperature:</label>
+                    <label for="temperature"><i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="What sampling temperature to use, between 0 and 2. <br><br>Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic."></i> Temperature: </label>
                     <div class="slider-container">
-                        <input type="range" class="form-control" id="temperature" name="temperature" min="0" max="2" step="0.1" value="0.2" oninput="updateSliderValue(this, 'temperature_output')" required>
-                        <span id="temperature_output">0.2</span>
+                        <input type="range" class="form-control" id="temperature" name="temperature" min="0" max="2" step="0.1" value="0.0" oninput="updateSliderValue(this, 'temperature_output')" required>
+                        <span id="temperature_output">0.0</span>
                     </div>
                 </div>
                 <div class="horizontal-line"></div>
                 <div class="form-group">
-                    <label for="vector_store">Vector Store:</label>
+                    <label for="vector_store"><i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="Select the vector store to use here. <br><br>    Pinecone (cloud): best results, limited *requires API key* <br>Chroma (local): free, unlimited local indexes"></i> Vector Store: </label>
                     <div>
                         <input type="radio" id="vector_store_pinecone" name="vector_store" value="pinecone" checked>
                         <label for="vector_store_pinecone">Pinecone</label>
                         <input type="radio" id="vector_store_chromadb" name="vector_store" value="chromadb">
-                        <label for="vector_store_chromadb">ChromaDB</label>
+                        <label for="vector_store_chromadb">Chroma</label>
+                        <input type="radio" id="vector_store_deeplake" name="vector_store" value="deeplake">
+                        <label for="vector_store_deeplake">DeepLake</label>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="update">Update:</label>
+                    <label for="update"><i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="Whether to update the vector store with the latest data, will take longer to load. <br><br> Note: Not working for Pinecone right now. Remove manually at app.pinecone.io "></i> Update (dysfunctional for Pinecone a.t.m.!): </label>
                     <div>
                         <input type="radio" id="update_true" name="update" value="true">
                         <label for="update_true">True</label>
@@ -235,15 +73,15 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="top_k">Top K:</label>
+                    <label for="top_k"><i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="The number of chunks to return by the document retriever. <br><br> Note:  Depending on the chunk size and context window size of the model, too high values might fill up the context window, which leads to the LLM 'forgetting' some earlier lines of text. I suggest to try something between 5 and 50. (Chunk size is currently hardcoded: 1000 characters)"></i> Top k chunks: </label>
                     <div class="slider-container">
-                        <input type="range" class="form-control" id="top_k" name="top_k" min="1" max="30" step="1" value="6" oninput="updateSliderValue(this, 'top_k_output')" required>
-                        <span id="top_k_output">6</span>
+                        <input type="range" class="form-control" id="top_k" name="top_k" min="1" max="150" step="1" value="20" oninput="updateSliderValue(this, 'top_k_output')" required>
+                        <span id="top_k_output">20</span>
                     </div>
                 </div>
                 <div id="alpha_form" class="form-group">
-                    <label for="alpha">Alpha: <i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="The alpha parameter controls the weighting between the dense and sparse vector search scores when Hybrid Search is used, which is currently the only search option for Pinecone. (see https://www.pinecone.io/learn/hybrid-search-intro/) 
-                    [1 -> Dense Search, 0 -> Sparse Search, 0.5 -> Hybrid Search] Advice: Use higher values for documents that are likely similar to the training domain of the LLM. Use lower values for documents with domain-specific language (e.g. Code, Medical Research Papers)" ></i></label>
+                    <label for="alpha"><i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="The alpha parameter controls the weighting between the dense and sparse vector search scores when Hybrid Search is used, which is currently the only search option for Pinecone. <br>(see: https://www.pinecone.io/learn/hybrid-search-intro/) <br><br>
+                        1 means dense search <br> 0 means sparse search <br> 0.5 means hybrid search <br><br> Advice: Use higher values for documents that are likely similar to the training domain of the LLM. Use lower values for documents with domain-specific language (e.g. medical research rapers, maybe code)" ></i> Alpha: </label>
                     <div class="slider-container">
                         <input type="range" class="form-control" id="alpha" name="alpha" min="0.1" max="0.9" step="0.1" value="0.5" oninput="updateSliderValue(this, 'alpha_output')" required>
                         <span id="alpha_output">0.5</span>
@@ -251,14 +89,14 @@
                 </div>
                 <div class="horizontal-line"></div>
                 <div class="form-group">
-                    <label for="mem_window_k">Chat Memory Length: <i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="Enter the memory window size here. This determines how many of the latest messages should be kept in the AIs memory."></i></label>
+                    <label for="mem_window_k"><i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="Enter the memory window size here. This determines how many of the latest messages should be kept in the AIs memory."></i> Chat Memory Length: </label>
                     <div class="slider-container">
                         <input type="range" class="form-control" id="mem_window_k" name="mem_window_k" min="0" max="40" step="1" value="6" oninput="updateSliderValue(this, 'mem_window_k_output')" required>
                         <span id="mem_window_k_output">6</span>
                     </div>
                 </div>                
                 <div class="form-group">
-                    <label for="compress">Compress:</label>
+                    <label for="compress"><i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="Whether to use the Contextual Compression Retriever from Langchain.<br> This is a tool that uses another retriever (LLM) to get relevant documents for a query, and then applies compressors and document transformers to filter out irrelevant or redundant information and return only the most relevant content to the user. <br><br>Note: You can increase the amount of chunks retrieved (top k) when enabled. Also, enabling will make repsonse times slower, depending on the model used for compression. <br><br> When enabled, choose a model for compression from the displayed drop-down menu."></i> Compression: </label>
                     <div>
                         <input type="radio" id="compress_true" name="compress" value="true" onchange="toggleModelNameCompressor()">
                         <label for="compress_true">True</label>
@@ -268,9 +106,9 @@
                     </div>
                 </div>
                 <div class="form-group form-group-textarea">
-                    <label for="model_name_compressor">Model Name Compressor:</label>
+                    <label for="model_name_compressor">Compression model:</label>
                     <div>
-                        <select id="model_name_compressor" name="model_name_compressor" class="form-control">
+                        <select id="model_name_compressor" name="model_name_compressor" class="form-control drop-down">
                             <option value="text-davinci-003">text-davinci-003</option>
                             <option value="text-davinci-002">text-davinci-002</option>
                             <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
@@ -284,18 +122,29 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="provide_sources">Provide Sources:</label>
+                    <label for="provide_sources"><i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="Whether to provide sources for the answers. <br><br>Note: WORK IN PROGRESS! Not functional."></i> Provide Sources (dysfunctional): </label>
                     <div>
                         <input type="radio" id="provide_sources_true" name="provide_sources" value="true">
                         <label for="provide_sources_true">True</label>
                         <input type="radio" id="provide_sources_false" name="provide_sources" value="false" checked>
                         <label for="provide_sources_false">False</label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="chain_type"><i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="Choose the Chain Type here."></i> Chain Type: </label>
+                    <div>
+                        <input type="radio" id="llm_chain" name="chain_type" value="llm_chain">
+                        <label for="llm_chain">LLM</label>
+                        <input type="radio" id="conv_retr_chain" name="chain_type" value="conv_retr_chain" checked>
+                        <label for="conv_retr_chain">Conversational Retrieval</label>
+                    </div>
                 </div>
                 <div class="horizontal-line"></div>
             </div>
             <button type="submit" class="btn btn-primary submit-button">Start Chat</button>
         </form>
     </div>
+    <script src="./../static/js/start_page.js"></script>
 </body>
 
 </html>
