@@ -1,26 +1,46 @@
 body {
     font-family: 'DM Sans', sans-serif;
-    background: #1717176d;
-    color: #ffffff;
-    background-image: url('./../images/background-3-us-cut.jpg');
+    /* background: #1717176d; */
+    background: #1e1e1f;
+    /* background-image: linear-gradient(-180deg, rgba(0, 0, 0, 0.5) 0%, rgba(0,0,0,0.50) 100%); */
+    background-blend-mode: lighten;
+    color: #ece8e8;
+    /* background-image: url('./../images/background-3-us-cut.jpg'); */
     background-repeat: no-repeat;
     background-position: center center;
     background-attachment: fixed;
     background-size: cover;
-    background-blend-mode: overlay;
+    /* background-blend-mode: overlay; */
 }
 
 h2 {
     font-weight: bold;
+    font-size: 40px;
     margin-bottom: 25px;
-    text-shadow: 6px 5px 8px #13131393;
+    /* text-shadow: 6px 5px 8px #13131393; */
+    background-color: rgb(0, 0, 0);
+}
+
+.header-style {
+    background: linear-gradient(to right, #00f260, #0575e6);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.form {
+    background-color: rgba(34, 34, 34, 0.8); /* Dark grey with 80% opacity */
+    border-radius: 10px; /* Rounded corners */
+    padding: 20px; /* Add some padding inside the form */
 }
 
 #header-icon {
-    height: 0.9em;
-    width: 0.9em;
-    margin-right: 0.2em;
+    height: 0.8em;
+    width: 0.8em;
+    /* margin-right: 0.2em; */
     margin-bottom: 0.2em;
+    fill: url(#header-icon-gradient);
+    filter: drop-shadow(0px 0px 0px #ffffff00) !important;
 }
 
 label {
@@ -92,7 +112,7 @@ label {
     position: relative;
     max-width: 85%;
     height: 2px;
-    background-color: #cdc7c719;
+    background-color: #31303019;
     margin: 10px 0;
     margin-top: 0px;
     margin-left: 6%;

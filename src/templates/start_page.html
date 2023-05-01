@@ -4,7 +4,7 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Start Page</title>
-    <link rel="icon" type="image/png" href="https://git-scm.com/images/logos/downloads/Git-Icon-White.png" />
+    <link rel="icon" type="image/png" href="./../static/images/GitChat-Logo.png" />
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <!-- TODO: get another qtip version that stays active until clicking away -->
@@ -19,11 +19,11 @@
 
 <body>
     <div class="container">
-        <h2 class="text-center" style="color: #f0f0f0;">
-            <img id="header-icon" src="https://git-scm.com/images/logos/downloads/Git-Icon-White.png" alt="GitChat Icon">
+        <h2 class="text-center header-style">
+            <img id="header-icon" src="./../static/images/GitChat-Logo.png" alt="GitChat Icon">
             GitChat - Configuration
         </h2>   
-        <form method="POST" action="{{ url_for('start') }}">
+        <form class=".form" method="POST" action="{{ url_for('start') }}">
             <div class="form-options"></div>
             <div class="horizontal-line"></div>
                 <div class="form-group form-group-textarea">
