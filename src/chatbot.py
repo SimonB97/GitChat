@@ -19,7 +19,6 @@ from langchain.vectorstores import Pinecone, DeepLake
 from langchain.document_loaders import TextLoader
 from langchain.memory import ConversationBufferWindowMemory
 from langchain.chat_models import ChatOpenAI
-from langchain.callbacks.base import CallbackManager
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain import OpenAI, PromptTemplate, LLMChain
 from langchain.retrievers import PineconeHybridSearchRetriever
@@ -320,7 +319,7 @@ def get_retriever(embeddings, index, bm25_encoder, top_k, alpha, vector_store, c
     elif vector_store == "chromadb":
         print("Using ChromaDB retriever")
         # TODO: implement ChromaDB retriever
-        search_type = "similarity"   # "mmr" or "similarity"
+        search_type = "mmr"   # "mmr" or "similarity"
         base_retriever = index.as_retriever(search_type=search_type, search_kwargs={"k": int(top_k)})
     elif vector_store == "deeplake":
         base_retriever = index.as_retriever()
@@ -402,13 +401,8 @@ def get_chat_prompt_template(system_message_prompt, human_message_prompt):
     return chat_prompt_template
 
 
-def get_callback_manager():
-    callback_manager = CallbackManager([StreamingStdOutCallbackHandler()])
-    return callback_manager
-
-
-def get_chat_model(temperature, model_name, callback_manager):
-    chat = ChatOpenAI(temperature=temperature, verbose=False, model_name=model_name, max_retries=2, streaming=True, callback_manager=callback_manager)
+def get_chat_model(temperature, model_name):
+    chat = ChatOpenAI(temperature=temperature, verbose=False, model_name=model_name, max_retries=4, streaming=True, callbacks=[StreamingStdOutCallbackHandler()])
     return chat
 
 
@@ -436,14 +430,18 @@ def get_chain(chat, chat_prompt_template, memory, provide_sources, chain_type, r
     elif provide_sources == "false" and chain_type == "llm_chain":
         print("Using chain without sources (LLMChain)")
         chain = LLMChain(llm=chat, prompt=chat_prompt_template, memory=memory)
-    elif provide_sources == "false" and chain_type == "conv_retr_chain":
+    elif chain_type == "conv_retr_chain":
+        if provide_sources == "true":
+            return_source_documents = True
+        else:
+            return_source_documents = False
         print("Using Conversational Retrieval Chain")
         chain = ConversationalRetrievalChain.from_llm(
             llm=chat, 
             retriever=retriever, 
             # qa_prompt=chat_prompt_template, 
             memory=memory,
-            return_source_documents=True,
+            return_source_documents=return_source_documents,
             verbose=False
             )
 
@@ -465,7 +463,7 @@ def generate_answer(user_input, chain, retriever, memory, provide_sources, chain
                    "chat_history": chat_history,
                    }]
         answer = chain.apply(inputs)
-    elif provide_sources == "false" and chain_type == "conv_retr_chain":
+    elif chain_type == "conv_retr_chain":
         print("DEBUG: Retrieval Chain")
         # chat_history = memory
         chat_history = memory.load_memory_variables({})
@@ -474,8 +472,10 @@ def generate_answer(user_input, chain, retriever, memory, provide_sources, chain
             "question": user_input, 
             "chat_history": chat_history
             })
-        # chat_history.append((user_input, answer['answer']))
-        context = answer['source_documents']
+        if provide_sources == "true":
+            context = answer['source_documents']
+        else:
+            context = ""
     else:
         # Generate answer with sources
         answer = chain.run(user_input)
@@ -557,8 +557,7 @@ def initialize_chatbot(model_name, top_k, temperature, mem_window_k, alpha, repo
     human_message_prompt = HumanMessagePromptTemplate(prompt=get_prompt_template())
     chat_prompt_template = get_chat_prompt_template(system_message_prompt, human_message_prompt)
 
-    callback_manager = get_callback_manager()
-    chat = get_chat_model(temperature, model_name, callback_manager)
+    chat = get_chat_model(temperature, model_name)
     memory = get_memory(mem_window_k)
     chain = get_chain(chat, chat_prompt_template, memory, provide_sources, chain_type, retriever)
 

@@ -21,7 +21,7 @@
     <div class="container">
         <h2 class="text-center header-style">
             <img id="header-icon" src="./../static/images/GitChat-Logo.png" alt="GitChat Icon">
-            GitChat - Configuration
+            GitChat Configuration
         </h2>   
         <form class=".form" method="POST" action="{{ url_for('start') }}">
             <div class="form-options"></div>
@@ -66,10 +66,10 @@
                 <div class="form-group">
                     <label for="update"><i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="Whether to update the vector store with the latest data, will take longer to load. <br><br> Note: Not working for Pinecone right now. Remove manually at app.pinecone.io "></i> Update (dysfunctional for Pinecone a.t.m.!): </label>
                     <div>
-                        <input type="radio" id="update_true" name="update" value="true">
-                        <label for="update_true">True</label>
                         <input type="radio" id="update_false" name="update" value="false" checked>
-                        <label for="update_false">False</label>
+                        <label for="update_false">Off</label>
+                        <input type="radio" id="update_true" name="update" value="true">
+                        <label for="update_true">On</label>
                     </div>
                 </div>
                 <div class="form-group">
@@ -98,10 +98,10 @@
                 <div class="form-group">
                     <label for="compress"><i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="Whether to use the Contextual Compression Retriever from Langchain.<br> This is a tool that uses another retriever (LLM) to get relevant documents for a query, and then applies compressors and document transformers to filter out irrelevant or redundant information and return only the most relevant content to the user. <br><br>Note: You can increase the amount of chunks retrieved (top k) when enabled. Also, enabling will make repsonse times slower, depending on the model used for compression. <br><br> When enabled, choose a model for compression from the displayed drop-down menu."></i> Compression: </label>
                     <div>
-                        <input type="radio" id="compress_true" name="compress" value="true" onchange="toggleModelNameCompressor()">
-                        <label for="compress_true">True</label>
                         <input type="radio" id="compress_false" name="compress" value="false" checked onchange="toggleModelNameCompressor()">
-                        <label for="compress_false">False</label>
+                        <label for="compress_false">Off</label>
+                        <input type="radio" id="compress_true" name="compress" value="true" onchange="toggleModelNameCompressor()">
+                        <label for="compress_true">On</label>
 
                     </div>
                 </div>
@@ -124,10 +124,10 @@
                 <div class="form-group">
                     <label for="provide_sources"><i class="info-icon glyphicon glyphicon-info-sign" data-tooltip="Whether to provide sources for the answers. <br><br>Note: WORK IN PROGRESS! Not functional."></i> Provide Sources (dysfunctional): </label>
                     <div>
-                        <input type="radio" id="provide_sources_true" name="provide_sources" value="true">
-                        <label for="provide_sources_true">True</label>
                         <input type="radio" id="provide_sources_false" name="provide_sources" value="false" checked>
-                        <label for="provide_sources_false">False</label>
+                        <label for="provide_sources_false">Off</label>
+                        <input type="radio" id="provide_sources_true" name="provide_sources" value="true">
+                        <label for="provide_sources_true">On</label>
                     </div>
                 </div>
                 <div class="form-group">
