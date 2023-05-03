@@ -5,6 +5,7 @@ from flask import Flask, redirect, request, render_template, jsonify, url_for, s
 
 from chatbot import generate_answer, chatbot_response, initialize_chatbot
 
+
 def get_ip_address():
     hostname = socket.gethostname()
     ip_address = socket.gethostbyname(hostname)
@@ -16,13 +17,15 @@ chain, retriever, memory, provide_sources, chain_type = None, None, None, None, 
 
 app = Flask(__name__)
 
+
 @app.route("/start", methods=["GET", "POST"])
 def start():
     if request.method == "POST":
         global chain, retriever, memory, chain_type, provide_sources
         # Get the user's input from the form
         repo_url_without_subdir = request.form["repo_url"]
-        print(f"repo url in request without subdirectory: {repo_url_without_subdir}")
+        print(
+            f"repo url in request without subdirectory: {repo_url_without_subdir}")
         subdirectory = request.form["subdirectory"]
         if subdirectory != "None" and subdirectory != "":
             print(f"subdirectory: {subdirectory}")
@@ -49,8 +52,9 @@ def start():
         print(f"repo url in request (complete): {repo_url}")
 
         # initiazlize the chatbot and store the variables in the global scope
-        
-        chain, retriever, memory = initialize_chatbot(model_name, top_k, temperature, mem_window_k, alpha, repo_url, subdirectory, update, chain_type, vector_store, compress, model_name_compressor, provide_sources)
+
+        chain, retriever, memory = initialize_chatbot(model_name, top_k, temperature, mem_window_k, alpha, repo_url,
+                                                      subdirectory, update, chain_type, vector_store, compress, model_name_compressor, provide_sources)
         # if chain_type == "conv_retr_chain":
         #     memory = []
 
@@ -90,4 +94,4 @@ if __name__ == "__main__":
         # debug=True,
         # host=ip_address
         host="0.0.0.0"  # TODO: security issue
-        )
+    )

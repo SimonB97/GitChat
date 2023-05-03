@@ -21,18 +21,19 @@ import utils.helpers as helpers
 
 # get user path
 user_path = os.path.expanduser("~")
-pandoc_path = os.path.join(user_path, "AppData", "Local", "Pandoc", "pandoc.exe")
+pandoc_path = os.path.join(
+    user_path, "AppData", "Local", "Pandoc", "pandoc.exe")
 
 
-#----- Github -----#
+# ----- Github -----#
 
 # function to get github docs from a repo url and convert to md
 def get_github_docs(repo_url: str):
     '''Get documents from a GitHub repository.
-    
+
     Args:
         repo_url (str): The URL of the GitHub repository.
-        
+
     Yields:
         '''
 
@@ -107,13 +108,17 @@ def get_github_docs(repo_url: str):
                 print(f'Encoding: {encoding}')
 
                 if file_ext == ".rst":
-                    page_content = helpers.convert_rst_to_md(str(file), encoding)
+                    page_content = helpers.convert_rst_to_md(
+                        str(file), encoding)
                 elif file_ext == ".ipynb":
-                    page_content = helpers.convert_ipynb_to_md(str(file), encoding)
+                    page_content = helpers.convert_ipynb_to_md(
+                        str(file), encoding)
                 elif file_ext == ".py":
-                    page_content = helpers.convert_py_to_md(str(file), encoding)
+                    page_content = helpers.convert_py_to_md(
+                        str(file), encoding)
                 else:
-                    page_content = helpers.convert_any_to_md(str(file), encoding)
+                    page_content = helpers.convert_any_to_md(
+                        str(file), encoding)
 
                 if page_content is not None:
                     yield Document(page_content=page_content, metadata={"source": github_url})
@@ -136,6 +141,7 @@ def get_github_docs(repo_url: str):
 #     subdirectory = "/".join(path_parts[4:]) if len(path_parts) > 4 else None
 #     return repo_owner, repo_name, subdirectory
 
+
 def extract_github_info(repo_url: str):
     print(f'DEBUG Repo URL: {repo_url}')
     parsed_url = urlparse(repo_url)
@@ -149,19 +155,21 @@ def extract_github_info(repo_url: str):
     return repo_owner, repo_name, subdirectory
 
 
-#----- Convert and output -----#
+# ----- Convert and output -----#
 
 # any to md
 def convert_any_to_md(filepath, encoding):
 
     with open(filepath, "r", encoding=encoding) as file:
         encoded_text = file.read()
-    
+
     md_content = f"\n{encoded_text}\n"
     print(f'Successfully converted {filepath} to markdown')
-    return md_content  
+    return md_content
 
 # ipynb to md
+
+
 def convert_ipynb_to_md(filepath, encoding):
     try:
         print(f"Trying to convert {filepath}")
@@ -205,17 +213,16 @@ def convert_ipynb_to_md(filepath, encoding):
         sys.exit(1)
 
 
-
-
 # rst to md
 def convert_rst_to_md(filepath, encoding):
     output_file = 'temp_output.md'
-    command = [pandoc_path, filepath, '-f', 'rst', '-t', 'markdown', '-o', output_file]
+    command = [pandoc_path, filepath, '-f', 'rst',
+               '-t', 'markdown', '-o', output_file]
     result = subprocess.run(command, capture_output=True, text=True)
 
     if result.returncode == 0:
         print(f'Successfully converted {filepath} to markdown')
-        
+
         # Read the converted file and remove custom blocks
         with open(output_file, "r", encoding=encoding) as f:
             md_content = f.read()
@@ -229,17 +236,21 @@ def convert_rst_to_md(filepath, encoding):
     else:
         print(f'Error during conversion: {result.stderr}')
         return None
-    
+
 # py to md
+
+
 def convert_py_to_md(filepath, encoding):
     with open(filepath, "r", encoding=encoding) as file:
         code = file.read()
-    
+
     md_content = f"python\n{code}\n"
     print(f'Successfully converted {filepath} to markdown')
-    return md_content  
+    return md_content
 
 # compile messages (chat history)
+
+
 def compile_messages(messages):
     compiled_string = ""
 
